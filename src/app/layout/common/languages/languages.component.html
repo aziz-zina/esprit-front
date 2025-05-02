@@ -1,37 +1,29 @@
-<!-- Button -->
-<button mat-icon-button [matMenuTriggerFor]="languages">
-    <ng-container
-        *ngTemplateOutlet="flagImage; context: { $implicit: activeLang }"
-    ></ng-container>
+<!-- Button to Trigger Language Menu -->
+<button
+    mat-icon-button
+    [matTooltip]="'navbar.toggle-language' | transloco"
+    [matMenuTriggerFor]="languages"
+>
+    <mat-icon svgIcon="heroicons_solid:language"></mat-icon>
 </button>
 
-<!-- Language menu -->
+<!-- Language Menu -->
 <mat-menu [xPosition]="'before'" #languages="matMenu">
-    @for (lang of availableLangs; track trackByFn($index, lang)) {
-        <button mat-menu-item (click)="setActiveLang(lang.id)">
-            <span class="flex items-center">
-                <ng-container
-                    *ngTemplateOutlet="
-                        flagImage;
-                        context: { $implicit: lang.id }
-                    "
-                ></ng-container>
-                <span class="ml-3">{{ lang.label }}</span>
+    @for (lang of availableLangs(); track trackByFn($index, lang)) {
+        <button
+            mat-menu-item
+            (click)="setActiveLang(lang.id)"
+            class="text-gray-700 hover:bg-gray-100 dark:text-white dark:hover:bg-slate-900"
+        >
+            <span
+                class="flex justify-between gap-2 text-base"
+                *transloco="let t; prefix: 'navbar'"
+            >
+                {{ t(lang.id) }}
+                @if (lang.id === activeLang()) {
+                    <mat-icon svgIcon="feather:check"></mat-icon>
+                }
             </span>
         </button>
     }
 </mat-menu>
-
-<!-- Flag image template -->
-<ng-template let-lang #flagImage>
-    <span class="relative w-6 overflow-hidden rounded-sm shadow">
-        <span
-            class="absolute inset-0 ring-1 ring-inset ring-black ring-opacity-10"
-        ></span>
-        <img
-            class="w-full"
-            [src]="'images/flags/' + flagCodes[lang].toUpperCase() + '.svg'"
-            [alt]="'Flag image for ' + lang"
-        />
-    </span>
-</ng-template>

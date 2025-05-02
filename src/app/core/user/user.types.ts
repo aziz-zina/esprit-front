@@ -1,7 +1,7 @@
 export interface User {
+    id: string;
     createdAt?: string;
     createdBy?: string;
-    dateOfBirth?: string;
     email: string;
     username: string;
     emailVerified?: boolean;
@@ -9,10 +9,12 @@ export interface User {
     firstName?: string;
     profilePicture?: string;
     fullName?: string;
-    id: string;
+    // locale: LocaleType;
     lastModifiedBy?: string;
     lastName?: string;
     phoneNumber?: string;
+    // roles?: RoleType[];
+    notificationPreference?: string;
     updatedAt?: string;
     version?: number;
 }

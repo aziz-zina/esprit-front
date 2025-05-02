@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
+import { LocalStorageService } from '@shared/services/local-storage.service';
 import Keycloak from 'keycloak-js';
-import { LocalStorageService } from '../../shared/services/local-storage.service';
 
 @Injectable({
     providedIn: 'root',
@@ -83,6 +83,10 @@ export class KeycloakService {
     }
 
     async logout() {
+        this.keycloak.logout();
+    }
+
+    async logoutRedirect() {
         this.localStorageService.removeLanguage();
         this.localStorageService.removeScheme();
         this.keycloak.clearToken();

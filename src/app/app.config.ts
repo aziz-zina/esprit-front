@@ -16,6 +16,7 @@ import {
     withComponentInputBinding,
     withInMemoryScrolling,
 } from '@angular/router';
+import { provideKeycloakAngular } from '@core/auth/keycloak.config';
 import { provideFuse } from '@fuse';
 import { Scheme } from '@fuse/services/config';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
@@ -25,10 +26,9 @@ import { provideAuth } from 'app/core/auth/auth.provider';
 import { provideIcons } from 'app/core/icons/icons.provider';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoHttpLoader } from './core/transloco/transloco.http-loader';
-import { provideKeycloakAngular } from './keycloak.config';
 import { MockApiService } from './mock-api/index';
-import { PaginatorI18nService } from './shared/services/paginator-i18n.service';
 import { TranslateTitleStrategy } from './shared/route-strategies/title-i18n-strategy';
+import { PaginatorI18nService } from './shared/services/paginator-i18n.service';
 
 export const APP_API_URL = new InjectionToken<string>('APP_API_URL');
 
@@ -86,12 +86,12 @@ export const appConfig: ApplicationConfig = {
                         label: 'French',
                     },
                     {
-                        id: 'ar',
-                        label: 'Arabic',
+                        id: 'en',
+                        label: 'English',
                     },
                 ],
-                defaultLang: localStorage.getItem('language') || 'ar',
-                fallbackLang: 'ar',
+                defaultLang: localStorage.getItem('language') || 'en',
+                fallbackLang: 'en',
                 reRenderOnLangChange: true,
                 prodMode: !isDevMode(),
             },
@@ -123,7 +123,7 @@ export const appConfig: ApplicationConfig = {
                 service: MockApiService,
             },
             fuse: {
-                layout: 'compact',
+                layout: 'classic',
                 scheme: getScheme(),
                 screens: {
                     sm: '600px',
@@ -131,7 +131,7 @@ export const appConfig: ApplicationConfig = {
                     lg: '1280px',
                     xl: '1440px',
                 },
-                theme: 'theme-brand',
+                theme: 'theme-rose',
                 themes: [
                     {
                         id: 'theme-default',
@@ -140,6 +140,10 @@ export const appConfig: ApplicationConfig = {
                     {
                         id: 'theme-brand',
                         name: 'Brand',
+                    },
+                    {
+                        id: 'theme-rose',
+                        name: 'Rose',
                     },
                 ],
             },

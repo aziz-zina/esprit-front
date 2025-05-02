@@ -5,7 +5,6 @@ import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
 import { FuseFullscreenComponent } from '@fuse/components/fullscreen';
 import { FuseLoadingBarComponent } from '@fuse/components/loading-bar';
 import {
-    FuseHorizontalNavigationComponent,
     FuseNavigationService,
     FuseVerticalNavigationComponent,
 } from '@fuse/components/navigation';
@@ -13,36 +12,29 @@ import { FuseMediaWatcherService } from '@fuse/services/media-watcher';
 import { NavigationService } from 'app/core/navigation/navigation.service';
 import { Navigation } from 'app/core/navigation/navigation.types';
 import { LanguagesComponent } from 'app/layout/common/languages/languages.component';
-import { MessagesComponent } from 'app/layout/common/messages/messages.component';
 import { NotificationsComponent } from 'app/layout/common/notifications/notifications.component';
-import { QuickChatComponent } from 'app/layout/common/quick-chat/quick-chat.component';
 import { SearchComponent } from 'app/layout/common/search/search.component';
-import { ShortcutsComponent } from 'app/layout/common/shortcuts/shortcuts.component';
 import { UserComponent } from 'app/layout/common/user/user.component';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
-    selector: 'modern-layout',
-    templateUrl: './modern.component.html',
+    selector: 'classic-layout',
+    templateUrl: './classic.component.html',
     encapsulation: ViewEncapsulation.None,
     imports: [
         FuseLoadingBarComponent,
         FuseVerticalNavigationComponent,
-        FuseHorizontalNavigationComponent,
         MatButtonModule,
         MatIconModule,
         LanguagesComponent,
         FuseFullscreenComponent,
         SearchComponent,
-        ShortcutsComponent,
-        MessagesComponent,
         NotificationsComponent,
         UserComponent,
         RouterOutlet,
-        QuickChatComponent,
     ],
 })
-export class ModernLayoutComponent implements OnInit, OnDestroy {
+export class ClassicLayoutComponent implements OnInit, OnDestroy {
     isScreenSmall: boolean;
     navigation: Navigation;
     private _unsubscribeAll: Subject<any> = new Subject<any>();

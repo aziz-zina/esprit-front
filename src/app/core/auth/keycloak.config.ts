@@ -23,10 +23,10 @@ export const provideKeycloakAngular = () =>
             clientId: import.meta.env.NG_APP_KEYCLOAK_CLIENT_ID,
         },
         initOptions: {
-            onLoad: 'check-sso',
+            onLoad: 'login-required',
             silentCheckSsoRedirectUri:
                 window.location.origin + '/silent-check-sso.html',
-            redirectUri: window.location.origin + '/',
+            redirectUri: window.location.origin + '/example',
         },
         features: [
             withAutoRefreshToken({

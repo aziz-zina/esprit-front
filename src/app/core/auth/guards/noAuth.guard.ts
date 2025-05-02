@@ -7,17 +7,15 @@ export const NoAuthGuard: CanActivateFn | CanActivateChildFn = () => {
     const router: Router = inject(Router);
 
     const keycloakService = inject(KeycloakService);
+    console.log('NoAuthGuard', keycloakService.authenticated);
 
     if (!keycloakService.authenticated) {
         return of(true);
     }
 
-    if (keycloakService.hasRole('admin')) {
-        router.navigate(['/admin/dashboard']);
-        return of(false);
-    }
-    if (keycloakService.hasRole('user')) {
-        router.navigate(['/home']);
-        return of(false);
-    }
+    // if (keycloakService.hasRole('admin')) {
+    //     router.navigate(['/example']);
+    //     return of(false);
+    // }
+    return of(false);
 };

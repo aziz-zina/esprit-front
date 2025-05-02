@@ -14,35 +14,25 @@ const isAccessAllowed = async (
     authData: AuthGuardData
 ): Promise<boolean | UrlTree> => {
     const { authenticated, grantedRoles } = authData;
-    const router = inject(Router);
 
-    // 1. If the user is not authenticated, redirect to home
-    if (!authenticated) {
-        return router.parseUrl('/landing');
+    const requiredRole = route.data['roles'] as string[];
+    if (!requiredRole) {
+        return false;
     }
 
-    // 2. Define role checkers
-    const isAdmin = grantedRoles.realmRoles.includes('admin');
-    const requiredRole = route.data['role'];
+    const hasRequiredRole = (roles: string[]): boolean =>
+        roles.some((role) =>
+            Object.values(grantedRoles.realmRoles).some((realmRoles) =>
+                realmRoles.includes(role)
+            )
+        );
 
-    // 3. Allow access immediately if the user is an admin
-    if (isAdmin) {
+    if (authenticated && hasRequiredRole(requiredRole)) {
         return true;
     }
 
-    // 4. Check if the user has the required role
-    if (requiredRole) {
-        const hasRequiredRole = (role: string): boolean =>
-            Object.values(grantedRoles.realmRoles).some((roles) =>
-                roles.includes(role)
-            );
-
-        if (!hasRequiredRole(requiredRole)) {
-            return router.parseUrl('/home');
-        }
-    }
-
-    return true;
+    const router = inject(Router);
+    return router.parseUrl('/example');
 };
 
 // Export the guard

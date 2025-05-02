@@ -1,22 +1,24 @@
-import { BooleanInput } from '@angular/cdk/coercion';
-import { NgClass } from '@angular/common';
 import {
     ChangeDetectionStrategy,
-    ChangeDetectorRef,
     Component,
-    Input,
-    OnDestroy,
+    DestroyRef,
+    inject,
+    input,
     OnInit,
+    signal,
     ViewEncapsulation,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
+import { MatRippleModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { Router } from '@angular/router';
-import { UserService } from 'app/core/user/user.service';
-import { User } from 'app/core/user/user.types';
-import { Subject, takeUntil } from 'rxjs';
+import { RouterLink } from '@angular/router';
+import { TranslocoModule } from '@jsverse/transloco';
+import { KeycloakService } from '../../../core/auth/keycloak.service';
+import { UserService } from '../../../core/user/user.service';
+import { User } from '../../../core/user/user.types';
 
 @Component({
     selector: 'user',
@@ -28,28 +30,19 @@ import { Subject, takeUntil } from 'rxjs';
         MatButtonModule,
         MatMenuModule,
         MatIconModule,
-        NgClass,
         MatDividerModule,
+        TranslocoModule,
+        RouterLink,
+        MatRippleModule,
     ],
 })
-export class UserComponent implements OnInit, OnDestroy {
-    /* eslint-disable @typescript-eslint/naming-convention */
-    static ngAcceptInputType_showAvatar: BooleanInput;
-    /* eslint-enable @typescript-eslint/naming-convention */
+export class UserComponent implements OnInit {
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly _userService = inject(UserService);
+    private readonly _keycloakService = inject(KeycloakService);
 
-    @Input() showAvatar: boolean = true;
-    user: User;
-
-    private _unsubscribeAll: Subject<any> = new Subject<any>();
-
-    /**
-     * Constructor
-     */
-    constructor(
-        private _changeDetectorRef: ChangeDetectorRef,
-        private _router: Router,
-        private _userService: UserService
-    ) {}
+    showAvatar = input(true);
+    readonly user = signal<User | null>(null);
 
     // -----------------------------------------------------------------------------------------------------
     // @ Lifecycle hooks
@@ -61,41 +54,24 @@ export class UserComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         // Subscribe to user changes
         this._userService.user$
-            .pipe(takeUntil(this._unsubscribeAll))
+            .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe((user: User) => {
-                this.user = user;
-
-                // Mark for check
-                this._changeDetectorRef.markForCheck();
+                this.user.set(user);
             });
-    }
-
-    /**
-     * On destroy
-     */
-    ngOnDestroy(): void {
-        // Unsubscribe from all subscriptions
-        this._unsubscribeAll.next(null);
-        this._unsubscribeAll.complete();
     }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Public methods
     // -----------------------------------------------------------------------------------------------------
 
-    /**
-     * Update the user status
-     *
-     * @param status
-     */
-    updateUserStatus(status: string): void {
-        console.log('User status updated:', status);
+    updateProfile(): void {
+        this._keycloakService.updateProfile();
     }
 
     /**
      * Sign out
      */
     signOut(): void {
-        this._router.navigate(['/sign-out']);
+        this._keycloakService.logout();
     }
 }

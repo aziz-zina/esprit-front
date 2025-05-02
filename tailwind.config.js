@@ -51,15 +51,6 @@ const themes = {
     rose: {
         primary: colors.rose,
     },
-    purple: {
-        primary: {
-            ...colors.purple,
-            DEFAULT: colors.purple[600],
-        },
-    },
-    amber: {
-        primary: colors.amber,
-    },
 };
 
 /**

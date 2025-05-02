@@ -1,8 +1,4 @@
-import {
-    HttpErrorResponse,
-    HttpHandlerFn,
-    HttpRequest,
-} from '@angular/common/http';
+import { HttpErrorResponse, HttpHandlerFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { HotToastService } from '@ngxpert/hot-toast';
@@ -16,18 +12,11 @@ export enum STATUS {
     INTERNAL_SERVER_ERROR = 500,
 }
 
-export function errorInterceptor(
-    req: HttpRequest<unknown>,
-    next: HttpHandlerFn
-) {
+export function errorInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) {
     const toast = inject(HotToastService);
     const transloco = inject(TranslocoService);
     const keycloakService = inject(KeycloakService);
-    const errorPages = [
-        STATUS.FORBIDDEN,
-        STATUS.NOT_FOUND,
-        STATUS.INTERNAL_SERVER_ERROR,
-    ];
+    const errorPages = [STATUS.FORBIDDEN, STATUS.NOT_FOUND, STATUS.INTERNAL_SERVER_ERROR];
 
     const getMessage = (error: HttpErrorResponse) => {
         if (error.error?.message) {
