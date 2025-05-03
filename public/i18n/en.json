@@ -105,6 +105,22 @@
             }
         }
     },
+    "navbar": {
+        "en": "English",
+        "fr": "French"
+    },
+    "search": "Rechercher",
+    "toast": {
+        "loading": "Chargement...",
+        "success": {
+            "add": "Ajouté avec succès",
+            "update": "Mis à jour avec succès",
+            "delete": "Supprimé avec succès"
+        },
+        "error": "Erreur",
+        "warning": "Avertissement",
+        "info": "Info"
+    },
     "langs": {
         "toggle": "Change Language",
         "en": "English",

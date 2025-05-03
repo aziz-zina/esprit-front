@@ -1,5 +1,293 @@
 {
-    "welcome-back": "Welcome back",
-    "Project": "Project",
-    "Analytics": "Analytics"
+    "routes": {
+        "home": "Accueil - Sabeel",
+        "users": {
+            "title": "Gestion des Utilisateurs - Sabeel",
+            "managers": "Gérer les Managers - Sabeel",
+            "vendors": "Gérer les Vendeurs - Sabeel",
+            "deliverys": "Gérer les Livreurs - Sabeel",
+            "technicians": "Gérer les Techniciens - Sabeel"
+        },
+        "dashboard": "Tableau de Bord - Sabeel"
+    },
+    "error": {
+        "generic": "Une erreur est survenue. Veuillez réessayer plus tard.",
+        "server": {
+            "user": {
+                "disabled": {
+                    "msg": "Votre compte a été désactivé. Veuillez contacter l'administrateur."
+                },
+                "locked": {
+                    "msg": "Votre compte a été verrouillé. Veuillez contacter l'administrateur."
+                }
+            },
+            "unexpected": {
+                "msg": "Une erreur inattendue est survenue. Veuillez réessayer plus tard."
+            },
+            "jwt": {
+                "expired": {
+                    "msg": "Le jeton a expiré. Veuillez vous reconnecter."
+                }
+            },
+            "access": {
+                "denied": {
+                    "msg": "Accès refusé. Veuillez vous connecter."
+                }
+            },
+            "bad-credentials": {
+                "msg": "L'email ou le mot de passe que vous avez saisi est incorrect."
+            },
+            "exists": {
+                "email-already-verified": {
+                    "msg": "Votre email a déjà été vérifié. Veuillez vous connecter."
+                },
+                "email-already-exists": {
+                    "msg": "Un compte avec cet email existe déjà."
+                }
+            },
+            "forbidden": {
+                "generic": {
+                    "msg": "Vous n'avez pas la permission d'effectuer cette action."
+                },
+                "action-not-allowed": {
+                    "msg": "Cette action n'est pas autorisée."
+                }
+            },
+            "unauthorized": {
+                "generic": {
+                    "msg": "Vous n'êtes pas autorisé à accéder à cette ressource."
+                },
+                "user-not-authorized": {
+                    "msg": "Vous n'êtes pas autorisé à accéder à cette ressource."
+                }
+            },
+            "bad-request": {
+                "passwords-do-not-match": {
+                    "msg": "Les mots de passe ne correspondent pas."
+                },
+                "wrong-password": {
+                    "msg": "Le mot de passe que vous avez saisi est incorrect."
+                },
+                "invalid-request": {
+                    "msg": "La requête est invalide."
+                },
+                "password-compromised": {
+                    "msg": "Le mot de passe que vous avez saisi a été trouvé dans une fuite de données publique. Veuillez en choisir un meilleur."
+                }
+            },
+            "conflict": {
+                "lock-version": {
+                    "msg": "Il y a un conflit de version. Les données ont peut-être été mises à jour par quelqu'un d'autre."
+                },
+                "missing-version": {
+                    "msg": "Les informations de version sont manquantes ou incorrectes."
+                }
+            },
+            "not-found": {
+                "generic": {
+                    "msg": "La ressource que vous recherchez n'a pas pu être trouvée."
+                },
+                "user": {
+                    "msg": "L'utilisateur que vous recherchez n'existe pas."
+                },
+                "code": {
+                    "msg": "Le code que vous avez saisi n'existe pas.",
+                    "used": {
+                        "msg": "Le code que vous avez saisi a déjà été utilisé."
+                    },
+                    "expired": {
+                        "msg": "Le code que vous avez saisi a expiré."
+                    }
+                },
+                "notification": {
+                    "msg": "Aucune notification trouvée pour l'utilisateur."
+                }
+            }
+        }
+    },
+    "navbar": {
+        "en": "Anglais",
+        "fr": "Français"
+    },
+    "search": "Rechercher",
+    "toast": {
+        "loading": "Chargement...",
+        "success": {
+            "add": "Ajouté avec succès",
+            "update": "Mis à jour avec succès",
+            "delete": "Supprimé avec succès"
+        },
+        "error": "Erreur",
+        "warning": "Avertissement",
+        "info": "Info"
+    },
+    "langs": {
+        "toggle": "Changer de langue",
+        "en": "Anglais",
+        "fr": "Français",
+        "ar": "Arabe"
+    },
+    "user-menu": {
+        "signedAs": "Connecté en tant que",
+        "profile": "Profil",
+        "settings": "Paramètres",
+        "logout": "Déconnexion"
+    },
+    "paginator": {
+        "items-per-page": "Éléments par page",
+        "next-page": "Page suivante",
+        "previous-page": "Page précédente",
+        "first-page": "Première page",
+        "last-page": "Dernière page",
+        "of": "de"
+    },
+    "buttons": {
+        "send": "Envoyer",
+        "back": "Retour",
+        "next": "Suivant",
+        "reset": "Réinitialiser",
+        "cancel-schedule": "Annuler la planification",
+        "save": "Enregistrer",
+        "skip": "Passer",
+        "finish": "Terminer",
+        "submit": "Soumettre",
+        "add": "Ajouter",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "cancel": "Annuler",
+        "yes": "Oui",
+        "no": "Non",
+        "confirm": "Confirmer",
+        "done": "Terminé",
+        "close": "Fermer",
+        "upload": "Téléverser",
+        "download": "Télécharger",
+        "search": "Rechercher",
+        "select": "Sélectionner",
+        "view": "Voir",
+        "create": "Créer",
+        "update": "Mettre à jour",
+        "remove": "Retirer",
+        "ok": "Ok",
+        "logout": "Déconnexion",
+        "clear": "Effacer",
+        "info-msg": "Cliquez pour vérifier les informations de contact",
+        "filter-msg": "Filtrer",
+        "delete-selected": "Supprimer la sélection"
+    },
+    "table": {
+        "titles": {
+            "admins": "Administrateurs",
+            "students": "Étudiants",
+            "teachers": "Enseignants",
+            "logs": "Journaux",
+            "repairs": "Réparations"
+        },
+        "headers": {
+            "name": "Nom",
+            "fullName": "Nom complet",
+            "email": "Email",
+            "phoneNumber": "Numéro de téléphone",
+            "firstName": "Prénom",
+            "lastName": "Nom de famille",
+            "address": "Adresse",
+            "category": "Catégorie",
+            "sub-category": "Sous-catégorie",
+            "min-stock-level": "Niveau de stock minimum",
+            "username": "Nom d'utilisateur",
+            "createdAt": "Créé le",
+            "title": "Titre",
+            "operation": "Actions",
+            "type": "Type",
+            "coverPicture": "Photo de couverture",
+            "profilePicture": "Photo de profil",
+            "status": "Statut",
+            "action": "Action",
+            "ipAddress": "Adresse IP",
+            "module": "Module",
+            "message": "Message",
+            "user": "Utilisateur",
+            "closedAt": "Fermé le",
+            "notes": "Notes"
+        },
+        "buttons": {
+            "delete": "Supprimer",
+            "edit": "Modifier",
+            "view": "Voir",
+            "add": "Ajouter",
+            "add-sub-category": "Ajouter une sous-catégorie",
+            "barcode": "Code-barres",
+            "assign": "Assigner à la boutique",
+            "unassign": "Désassigner de la boutique",
+            "view-notes": "Voir les notes"
+        },
+        "filters": {
+            "action": "Action",
+            "module": "Module",
+            "none": "Aucun",
+            "all": "Tous"
+        },
+        "columns": "Colonnes affichées",
+        "noResult": "Aucun résultat trouvé",
+        "noSubCategories": "Aucune sous-catégorie trouvée, veuillez en ajouter une.",
+        "name": "Nom",
+        "enable": "Activer",
+        "disable": "Désactiver",
+        "emailVerified": "Email vérifié",
+        "emailNotVerified": "Email non vérifié",
+        "description": "Description",
+        "url": "URL",
+        "type": "Type",
+        "noData": "Aucune donnée",
+        "sortedBy": "Trié par",
+        "filter-msg": "Changer le statut à : ",
+        "dateNotAvailable": "Date non disponible",
+        "coverPicture": "Photo de couverture",
+        "extension": "Extension",
+        "contact-page": "Page de contact",
+        "confirmationDialog": {
+            "title": "Confirmation",
+            "toggle": {
+                "enable": "Êtes-vous sûr de vouloir activer cet utilisateur ?",
+                "disable": "Êtes-vous sûr de vouloir désactiver cet utilisateur ?",
+                "lock": "Êtes-vous sûr de vouloir verrouiller cet utilisateur ?",
+                "unlock": "Êtes-vous sûr de vouloir déverrouiller cet utilisateur ?",
+                "success": {
+                    "enable": "Utilisateur activé avec succès",
+                    "disable": "Utilisateur désactivé avec succès",
+                    "lock": "Utilisateur verrouillé avec succès",
+                    "unlock": "Utilisateur déverrouillé avec succès"
+                }
+            },
+            "deleteUser": "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+            "cancel": "Annuler",
+            "confirm": "Confirmer"
+        }
+    },
+    "add-user": {
+        "title": "Ajouter un utilisateur",
+        "updateTitle": "Modifier l'utilisateur",
+        "email": "Email",
+        "emailRequired": "L'email est requis",
+        "emailInvalid": "Veuillez saisir un email valide",
+        "emailAlreadyExists": "Un compte avec cet email existe déjà",
+        "username": "Nom d'utilisateur",
+        "usernameRequired": "Le nom d'utilisateur est requis",
+        "firstName": "Prénom",
+        "firstNameRequired": "Le prénom est requis",
+        "lastName": "Nom de famille",
+        "lastNameRequired": "Le nom de famille est requis",
+        "phoneNumber": "Numéro de téléphone",
+        "phoneNumberRequired": "Le numéro de téléphone est requis",
+        "address": "Adresse",
+        "addressRequired": "L'adresse est requise",
+        "fullName": "Nom complet",
+        "userCreated": "Utilisateur créé avec succès",
+        "close": "Fermer",
+        "badgeCodeRequired": "Le code de badge est requis",
+        "add-success": "Utilisateur ajouté avec succès, un email de confirmation a été envoyé à l'adresse email de l'utilisateur.",
+        "add-error": "Une erreur est survenue lors de l'ajout de l'utilisateur. Veuillez réessayer plus tard.",
+        "update-success": "Utilisateur mis à jour avec succès",
+        "update-error": "Une erreur est survenue lors de la mise à jour de l'utilisateur. Veuillez réessayer plus tard."
+    }
 }
