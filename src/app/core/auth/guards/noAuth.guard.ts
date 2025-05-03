@@ -7,7 +7,6 @@ export const NoAuthGuard: CanActivateFn | CanActivateChildFn = () => {
     const router: Router = inject(Router);
 
     const keycloakService = inject(KeycloakService);
-    console.log('NoAuthGuard', keycloakService.authenticated);
 
     if (!keycloakService.authenticated) {
         return of(true);

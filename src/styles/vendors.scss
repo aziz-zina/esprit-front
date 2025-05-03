@@ -3,7 +3,11 @@
 /* ----------------------------------------------------------------------------------------------------- */
 
 /* Perfect scrollbar */
-@import 'perfect-scrollbar/css/perfect-scrollbar.css';
+@use 'perfect-scrollbar/css/perfect-scrollbar.css';
 
 /* Quill */
-@import 'quill/dist/quill.snow.css';
+@use 'quill/dist/quill.snow.css';
+
+/* Importing @ngxpert/hot-toast SCSS file. */
+@use '@ngxpert/hot-toast/styles';
+@use '@ng-matero/extensions/prebuilt-themes/azure-blue.css';

@@ -1,5 +1,277 @@
 {
-    "welcome-back": "Hoşgeldin",
-    "Project": "Proje",
-    "Analytics": "Analitik"
+    "routes": {
+        "home": "Home - Sabeel",
+        "users": {
+            "title": "User Management - Sabeel",
+            "managers": "Manage Managers - Sabeel",
+            "vendors": "Manage Vendors - Sabeel",
+            "deliverys": "Manage Delivery Persons - Sabeel",
+            "technicians": "Manage Technicians - Sabeel"
+        },
+        "dashboard": "Dashboard - Sabeel"
+    },
+    "error": {
+        "generic": "An error occurred. Please try again later.",
+        "server": {
+            "user": {
+                "disabled": {
+                    "msg": "Your account has been disabled. Please contact the administrator."
+                },
+                "locked": {
+                    "msg": "Your account has been locked. Please contact the administrator."
+                }
+            },
+            "unexpected": {
+                "msg": "An unexpected error occurred. Please try again later."
+            },
+            "jwt": {
+                "expired": {
+                    "msg": "The token has expired. Please log in again."
+                }
+            },
+            "access": {
+                "denied": {
+                    "msg": "Access denied. Please log in."
+                }
+            },
+            "bad-credentials": {
+                "msg": "The email or password you entered is incorrect."
+            },
+            "exists": {
+                "email-already-verified": {
+                    "msg": "Your email has already been verified. Please log in."
+                },
+                "email-already-exists": {
+                    "msg": "An account with this email already exists."
+                }
+            },
+            "forbidden": {
+                "generic": {
+                    "msg": "You do not have permission to perform this action."
+                },
+                "action-not-allowed": {
+                    "msg": "This action is not allowed."
+                }
+            },
+            "unauthorized": {
+                "generic": {
+                    "msg": "You are not authorized to access this resource."
+                },
+                "user-not-authorized": {
+                    "msg": "You are not authorized to access this resource."
+                }
+            },
+            "bad-request": {
+                "passwords-do-not-match": {
+                    "msg": "Passwords do not match."
+                },
+                "wrong-password": {
+                    "msg": "The password you entered is incorrect."
+                },
+                "invalid-request": {
+                    "msg": "The request is invalid."
+                },
+                "password-compromised": {
+                    "msg": "The password you entered was found in a public data leak. Please choose a better one."
+                }
+            },
+            "conflict": {
+                "lock-version": {
+                    "msg": "There is a version conflict. The data may have been updated by someone else."
+                },
+                "missing-version": {
+                    "msg": "Version information is missing or incorrect."
+                }
+            },
+            "not-found": {
+                "generic": {
+                    "msg": "The resource you are looking for could not be found."
+                },
+                "user": {
+                    "msg": "The user you are looking for does not exist."
+                },
+                "code": {
+                    "msg": "The code you entered does not exist.",
+                    "used": {
+                        "msg": "The code you entered has already been used."
+                    },
+                    "expired": {
+                        "msg": "The code you entered has expired."
+                    }
+                },
+                "notification": {
+                    "msg": "No notification found for the user."
+                }
+            }
+        }
+    },
+    "langs": {
+        "toggle": "Change Language",
+        "en": "English",
+        "fr": "French",
+        "ar": "Arabic"
+    },
+    "user-menu": {
+        "signedAs": "Signed in as",
+        "profile": "Profile",
+        "settings": "Settings",
+        "logout": "Logout"
+    },
+    "paginator": {
+        "items-per-page": "Items per page",
+        "next-page": "Next page",
+        "previous-page": "Previous page",
+        "first-page": "First page",
+        "last-page": "Last page",
+        "of": "of"
+    },
+    "buttons": {
+        "send": "Send",
+        "back": "Back",
+        "next": "Next",
+        "reset": "Reset",
+        "cancel-schedule": "Cancel Schedule",
+        "save": "Save",
+        "skip": "Skip",
+        "finish": "Finish",
+        "submit": "Submit",
+        "add": "Add",
+        "edit": "Edit",
+        "delete": "Delete",
+        "cancel": "Cancel",
+        "yes": "Yes",
+        "no": "No",
+        "confirm": "Confirm",
+        "done": "Done",
+        "close": "Close",
+        "upload": "Upload",
+        "download": "Download",
+        "search": "Search",
+        "select": "Select",
+        "view": "View",
+        "create": "Create",
+        "update": "Update",
+        "remove": "Remove",
+        "ok": "Ok",
+        "logout": "Logout",
+        "clear": "Clear",
+        "info-msg": "Click to check contact information",
+        "filter-msg": "Filter",
+        "delete-selected": "Delete selected"
+    },
+    "table": {
+        "titles": {
+            "admins": "Admins",
+            "students": "Students",
+            "teachers": "Teachers",
+            "logs": "Logs",
+            "repairs": "Repairs"
+        },
+        "headers": {
+            "name": "Name",
+            "fullName": "Full Name",
+            "email": "Email",
+            "phoneNumber": "Phone Number",
+            "firstName": "First Name",
+            "lastName": "Last Name",
+            "address": "Address",
+            "category": "Category",
+            "sub-category": "Sub-category",
+            "min-stock-level": "Minimum Stock Level",
+            "username": "Username",
+            "createdAt": "Created At",
+            "title": "Title",
+            "operation": "Actions",
+            "type": "Type",
+            "coverPicture": "Cover Picture",
+            "profilePicture": "Profile Picture",
+            "status": "Status",
+            "action": "Action",
+            "ipAddress": "IP Address",
+            "module": "Module",
+            "message": "Message",
+            "user": "User",
+            "closedAt": "Closed At",
+            "notes": "Notes"
+        },
+        "buttons": {
+            "delete": "Delete",
+            "edit": "Edit",
+            "view": "View",
+            "add": "Add",
+            "add-sub-category": "Add Sub-category",
+            "barcode": "Barcode",
+            "assign": "Assign to Shop",
+            "unassign": "Unassign from Shop",
+            "view-notes": "View Notes"
+        },
+        "filters": {
+            "action": "Action",
+            "module": "Module",
+            "none": "None",
+            "all": "All"
+        },
+        "columns": "Displayed Columns",
+        "noResult": "No results found",
+        "noSubCategories": "No subcategories found, please add one.",
+        "name": "Name",
+        "enable": "Enable",
+        "disable": "Disable",
+        "emailVerified": "Email verified",
+        "emailNotVerified": "Email not verified",
+        "description": "Description",
+        "url": "URL",
+        "type": "Type",
+        "noData": "No data",
+        "sortedBy": "Sorted By",
+        "filter-msg": "Change the status to: ",
+        "dateNotAvailable": "Date not available",
+        "coverPicture": "Cover Picture",
+        "extension": "Extension",
+        "contact-page": "Contact Page",
+        "confirmationDialog": {
+            "title": "Confirmation",
+            "toggle": {
+                "enable": "Are you sure you want to enable this user?",
+                "disable": "Are you sure you want to disable this user?",
+                "lock": "Are you sure you want to lock this user?",
+                "unlock": "Are you sure you want to unlock this user?",
+                "success": {
+                    "enable": "User enabled successfully",
+                    "disable": "User disabled successfully",
+                    "lock": "User locked successfully",
+                    "unlock": "User unlocked successfully"
+                }
+            },
+            "deleteUser": "Are you sure you want to delete this user?",
+            "cancel": "Cancel",
+            "confirm": "Confirm"
+        }
+    },
+    "add-user": {
+        "title": "Add User",
+        "updateTitle": "Update User",
+        "email": "Email",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Please enter a valid email",
+        "emailAlreadyExists": "An account with this email already exists",
+        "username": "Username",
+        "usernameRequired": "Username is required",
+        "firstName": "First Name",
+        "firstNameRequired": "First Name is required",
+        "lastName": "Last Name",
+        "lastNameRequired": "Last Name is required",
+        "phoneNumber": "Phone Number",
+        "phoneNumberRequired": "Phone Number is required",
+        "address": "Address",
+        "addressRequired": "Address is required",
+        "fullName": "Full Name",
+        "userCreated": "User created successfully",
+        "close": "Close",
+        "badgeCodeRequired": "Badge Code is required",
+        "add-success": "User added successfully, a confirmation email has been sent to the User's email address.",
+        "add-error": "An error occurred while adding the User. Please try again later.",
+        "update-success": "User updated successfully",
+        "update-error": "An error occurred while updating the User. Please try again later."
+    }
 }

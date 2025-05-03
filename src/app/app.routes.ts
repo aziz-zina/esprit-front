@@ -7,7 +7,7 @@ import { LayoutComponent } from './layout/layout.component';
 // @formatter:off
 
 export const appRoutes: Route[] = [
-    { path: '', pathMatch: 'full', redirectTo: 'landing' },
+    { path: '', pathMatch: 'full', redirectTo: 'example' },
 
     // Landing routes
     {
@@ -47,6 +47,42 @@ export const appRoutes: Route[] = [
 
                 loadChildren: () =>
                     import('./modules/admin/example/example.routes'),
+            },
+            {
+                path: 'users',
+                title: 'routes.users.teachers.title',
+                data: {
+                    roles: ['admin', 'student'],
+                },
+                children: [
+                    {
+                        path: 'admins',
+                        title: 'routes.users.admins.title',
+                        data: {
+                            roles: ['admin', 'student'],
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/users/admins/admins.routes'
+                            ),
+                    },
+                    {
+                        path: 'teachers',
+                        title: 'routes.users.teachers.title',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/users/teachers/teachers.routes'
+                            ),
+                    },
+                    {
+                        path: 'students',
+                        title: 'routes.users.students.title',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/users/students/students.routes'
+                            ),
+                    },
+                ],
             },
         ],
     },

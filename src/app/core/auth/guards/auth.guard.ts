@@ -31,6 +31,8 @@ const isAccessAllowed = async (
         return true;
     }
 
+    console.log('im here');
+
     const router = inject(Router);
     return router.parseUrl('/example');
 };

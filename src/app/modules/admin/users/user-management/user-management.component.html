@@ -1,0 +1,166 @@
+<div
+    *transloco="let t"
+    class="flex min-w-0 flex-auto flex-col bg-gray-200 sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
+>
+    <div
+        class="bg-card relative flex flex-0 flex-col border-b px-6 py-8 sm:flex-row sm:items-center sm:justify-between md:px-8"
+    >
+        <div class="flex gap-3">
+            <button
+                type="button"
+                class="flex items-center justify-center"
+                title="back"
+                [routerLink]="['/home/administration/users']"
+            >
+                <mat-icon
+                    class="size-8"
+                    [svgIcon]="'feather:arrow-left-circle'"
+                />
+            </button>
+            <div class="text-4xl font-extrabold tracking-tight">
+                {{ t(getTitleKey()) }}
+            </div>
+        </div>
+        <div class="mt-6 flex shrink-0 items-center gap-3 sm:ml-4 sm:mt-0">
+            @if (role() !== 'student') {
+                <button
+                    mat-flat-button
+                    class="ml-2 text-white"
+                    type="button"
+                    [disabled]="isDisabled()"
+                    [color]="'primary'"
+                    (click)="openAddDialog()"
+                >
+                    <mat-icon [svgIcon]="'heroicons_outline:plus'" />
+                    <span class="ml-2">{{ t('buttons.add') }}</span>
+                </button>
+            }
+
+            <mat-form-field
+                class="fuse-mat-dense fuse-mat-rounded min-w-48 md:hidden"
+                [subscriptSizing]="'dynamic'"
+            >
+                <mat-icon
+                    class="icon-size-5"
+                    matPrefix
+                    [svgIcon]="'heroicons_solid:magnifying-glass'"
+                />
+                <input
+                    matInput
+                    class="truncate"
+                    title="search"
+                    [formControl]="searchInputControl"
+                    [autocomplete]="'off'"
+                    [placeholder]="t('search')"
+                />
+            </mat-form-field>
+        </div>
+    </div>
+    @if (!isLoading()) {
+        <div
+            class="flex justify-between bg-gray-200 p-10 sm:overflow-x-auto sm:overflow-y-auto dark:bg-transparent"
+        >
+            <div
+                class="max-w-8xl mx-auto flex w-full flex-auto flex-col rounded-lg sm:overflow-x-auto sm:overflow-y-auto"
+            >
+                <mtx-grid
+                    [data]="users()"
+                    [columns]="columns()"
+                    [loading]="isLoading()"
+                    [columnResizable]="false"
+                    [rowStriped]="false"
+                    [showToolbar]="true"
+                    [pageOnFront]="false"
+                    [length]="totalElements()"
+                    [pageSizeOptions]="pageSizeOptions()"
+                    [pageIndex]="pageRequest().page"
+                    [pageSize]="pageRequest().size"
+                    [cellTemplate]="{
+                        status: statusTpl,
+                        profilePicture: profilePictureTpl,
+                    }"
+                    [headerTemplate]="headerTpl"
+                    [noResultTemplate]="noResultTpl"
+                    [toolbarTemplate]="toolbarTpl"
+                    [columnMenuButtonText]="t('table.columns')"
+                    [columnMenuButtonType]="'stroked'"
+                    [columnMenuButtonColor]="'primary'"
+                    [noResultText]="t('table.noResult')"
+                    (page)="onPageEvent($event)"
+                    (sortChange)="onSortChange($event)"
+                >
+                    <ng-template
+                        #profilePictureTpl
+                        let-user
+                        [class]="headerClass"
+                    >
+                        <button type="button" mat-icon-button>
+                            @if (user.profilePicture) {
+                                <img
+                                    class="h-10 w-10 rounded-full"
+                                    alt="User profile"
+                                    height="10"
+                                    width="10"
+                                    referrerpolicy="no-referrer"
+                                    [ngSrc]="user.profilePicture"
+                                />
+                            } @else {
+                                <div
+                                    class="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 text-lg uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                                >
+                                    {{ user.firstName.charAt(0) }}
+                                    {{ user.lastName.charAt(0) }}
+                                </div>
+                            }
+                        </button>
+                    </ng-template>
+                    <ng-template #toolbarTpl>
+                        <div class="flex w-full items-center gap-2">
+                            <mat-form-field
+                                class="fuse-mat-dense hidden w-full bg-white md:block"
+                                [subscriptSizing]="'dynamic'"
+                            >
+                                <mat-icon
+                                    class="icon-size-5"
+                                    matPrefix
+                                    [svgIcon]="
+                                        'heroicons_solid:magnifying-glass'
+                                    "
+                                />
+                                <input
+                                    matInput
+                                    class="truncate"
+                                    title="search"
+                                    [formControl]="searchInputControl"
+                                    [autocomplete]="'off'"
+                                    [placeholder]="t('search')"
+                                />
+                            </mat-form-field>
+                        </div>
+                    </ng-template>
+                    <ng-template
+                        #statusTpl
+                        let-row
+                        let-index="index"
+                        let-col="colDef"
+                    >
+                        <mat-slide-toggle
+                            [color]="'primary '"
+                            [matTooltip]="
+                                row.enabled
+                                    ? t('table.disable')
+                                    : t('table.enable')
+                            "
+                            [checked]="row.enabled"
+                            (change)="check($event, row)"
+                        />
+                    </ng-template>
+                </mtx-grid>
+            </div>
+        </div>
+    } @else {
+        <div class="flex h-full w-full items-center justify-center">
+            <mat-progress-spinner mode="indeterminate" />
+        </div>
+    }
+</div>

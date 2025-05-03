@@ -1,3 +1,5 @@
+import { Role } from 'app/models/enums';
+
 export interface User {
     id: string;
     createdAt?: string;
@@ -13,7 +15,7 @@ export interface User {
     lastModifiedBy?: string;
     lastName?: string;
     phoneNumber?: string;
-    // roles?: RoleType[];
+    roles?: Role[];
     notificationPreference?: string;
     updatedAt?: string;
     version?: number;
@@ -29,4 +31,22 @@ export interface UpdateAccount {
     position: string;
     country: string;
     address: string;
+}
+
+export interface AddUserRequest {
+    firstName: string;
+    lastName: string;
+    email: string;
+    address: string;
+    phoneNumber: string;
+    roles: Role[];
+}
+
+export interface UpdateUserRequest {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    // email?: string;
+    address?: string;
+    phoneNumber?: string;
 }
