@@ -107,11 +107,4 @@ export class UserService {
             }
         );
     }
-
-    getTechniciansByShop(): Observable<User[]> {
-        return this._httpClient.get<User[]>(
-            `${this.API_URL}/users/technicians`,
-            {}
-        );
-    }
 }

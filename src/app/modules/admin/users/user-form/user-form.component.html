@@ -58,6 +58,29 @@
                         }
                     </mat-form-field>
                 </div>
+                <div class="flex">
+                    <mat-form-field
+                        class="mb-3 flex-auto"
+                        subscriptSizing="dynamic"
+                    >
+                        <mat-label>{{ t('username') }}</mat-label>
+                        <input
+                            title="Username"
+                            matInput
+                            required
+                            [formControlName]="'username'"
+                        />
+                        <mat-icon
+                            class="icon-size-5"
+                            matPrefix
+                            [svgIcon]="'mat_solid:location_on'"
+                        />
+
+                        <mat-error>
+                            {{ t('usernameRequired') }}
+                        </mat-error>
+                    </mat-form-field>
+                </div>
 
                 <div class="flex">
                     <mat-form-field
@@ -160,7 +183,7 @@
             >
                 <button
                     type="button"
-                    class="px-8"
+                    class="px-8 text-white"
                     mat-flat-button
                     [color]="'primary'"
                     [disabled]="!addUserForm.valid || addUserForm.disabled"

@@ -12,7 +12,7 @@ const generatePalette = require(
  * Tailwind-like color palettes automatically
  */
 const customPalettes = {
-    brand: generatePalette('#2196F3'),
+    brand: generatePalette('#CE181F'),
 };
 
 /**
@@ -42,14 +42,8 @@ const themes = {
     brand: {
         primary: customPalettes.brand,
     },
-    teal: {
-        primary: {
-            ...colors.teal,
-            DEFAULT: colors.teal[600],
-        },
-    },
     rose: {
-        primary: colors.rose,
+        primary: colors.red,
     },
 };
 

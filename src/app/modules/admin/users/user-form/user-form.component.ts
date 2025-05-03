@@ -1,21 +1,32 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    inject,
+    OnInit,
+    signal,
+} from '@angular/core';
+import {
+    FormBuilder,
+    FormsModule,
+    ReactiveFormsModule,
+    Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatStepperModule } from '@angular/material/stepper';
 import { UserService } from '@core/user/user.service';
-import { AddUserRequest, User } from '@core/user/user.types';
+import { AddUserRequest } from '@core/user/user.types';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { catchError, of } from 'rxjs';
 import { UpdateUserRequest } from '../../../../core/user/user.types';
 import { emailExistsValidator } from './email-exists';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
     selector: 'app-add-admins',
@@ -30,7 +41,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         MatDatepickerModule,
         TranslocoModule,
         MatStepperModule,
-        MatProgressSpinnerModule
+        MatProgressSpinnerModule,
     ],
     templateUrl: './user-form.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -55,11 +66,19 @@ export class UserFormComponent implements OnInit {
     readonly updateMode = signal(!!this.DIALOG_DATA.user);
 
     addUserForm = this._formBuilder.group({
-        email: ['', [Validators.required, Validators.email], [emailExistsValidator(this._userService)]],
+        email: [
+            '',
+            [Validators.required, Validators.email],
+            [emailExistsValidator(this._userService)],
+        ],
         firstName: ['', [Validators.required, Validators.minLength(2)]],
         lastName: ['', [Validators.required, Validators.minLength(2)]],
         address: ['', [Validators.required, Validators.minLength(2)]],
-        phoneNumber: ['', [Validators.required, Validators.pattern('^[0-9]{8}$')]],
+        username: ['', [Validators.required, Validators.minLength(2)]],
+        phoneNumber: [
+            '',
+            [Validators.required, Validators.pattern('^[0-9]{8}$')],
+        ],
     });
 
     // -----------------------------------------------------------------------------------------------------
@@ -80,9 +99,11 @@ export class UserFormComponent implements OnInit {
                 firstName: this.DIALOG_DATA.user.firstName,
                 lastName: this.DIALOG_DATA.user.lastName,
                 address: this.DIALOG_DATA.user.address,
+                username: this.DIALOG_DATA.user.username,
                 phoneNumber: this.DIALOG_DATA.user.phoneNumber,
             });
             this.addUserForm.controls.email.disable();
+            this.addUserForm.controls.username.disable();
         }
     }
 
@@ -113,11 +134,15 @@ export class UserFormComponent implements OnInit {
                     loading: this._translocoService.translate('toast.loading'),
                     success: () => {
                         this._dialogRef.close('success');
-                        return this._translocoService.translate('add-user.update-success');
+                        return this._translocoService.translate(
+                            'add-user.update-success'
+                        );
                     },
                     error: () => {
                         this.addUserForm.enable();
-                        return this._translocoService.translate('add-user.update-error');
+                        return this._translocoService.translate(
+                            'add-user.update-error'
+                        );
                     },
                 }),
                 catchError((error: unknown) => {
@@ -132,6 +157,7 @@ export class UserFormComponent implements OnInit {
             firstName: this.addUserForm.value.firstName,
             lastName: this.addUserForm.value.lastName,
             email: this.addUserForm.value.email,
+            username: this.addUserForm.value.username,
             phoneNumber: this.addUserForm.value.phoneNumber,
             address: this.addUserForm.value.address,
             roles: [this.DIALOG_DATA.role],
@@ -142,14 +168,18 @@ export class UserFormComponent implements OnInit {
             .pipe(
                 this.toastService.observe({
                     loading: this._translocoService.translate('toast.loading'),
-                    success: (res: User) => {
-                        this.createdUser.set(res);
+                    success: () => {
                         this.addUserForm.enable();
-                        return this._translocoService.translate('add-user.add-success');
+                        this._dialogRef.close('success');
+                        return this._translocoService.translate(
+                            'add-user.add-success'
+                        );
                     },
                     error: () => {
                         this.addUserForm.enable();
-                        return this._translocoService.translate('add-user.add-error');
+                        return this._translocoService.translate(
+                            'add-user.add-error'
+                        );
                     },
                 }),
                 catchError((error: unknown) => {
@@ -158,8 +188,6 @@ export class UserFormComponent implements OnInit {
             )
             .subscribe();
     }
-
-  
 
     close(response: 'cancel' | 'success') {
         this._dialogRef.close(response);
