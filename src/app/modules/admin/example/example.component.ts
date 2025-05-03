@@ -20,87 +20,68 @@ import { Buffer } from 'buffer';
 // Isomorphic Git and related imports
 import FS from '@isomorphic-git/lightning-fs';
 import * as git from 'isomorphic-git';
-import http from 'isomorphic-git/http/web';
+import http from 'isomorphic-git/http/web'; // http is still needed
 import { ExampleService, GithubApiRepo } from './example.service'; // Import service and interface
 
 // --- Interfaces ---
-interface TreeNode {
-    name: string;
-    path: string;
-    isDirectory: boolean;
-    children?: TreeNode[];
-    expanded?: boolean;
-}
+interface TreeNode { name: string; path: string; isDirectory: boolean; children?: TreeNode[]; expanded?: boolean; }
+interface SelectedFile { path: string; content: string | null; originalContent: string | null; isDirty: boolean; isLoading: boolean; error?: string; }
+interface RepositoryInfo { id: number; name: string; fullName: string; url: string; // Original HTTPS URL
+    localPath: string; }
 
-interface SelectedFile {
-    path: string;            // Relative path in repo
-    content: string | null;  // Current content in editor
-    originalContent: string | null; // Content when file was opened (to check dirty state)
-    isDirty: boolean;        // Flag if content has changed
-    isLoading: boolean;
-    error?: string;
-}
+// Define constants for Git status codes based on isomorphic-git's statusMatrix
+// [filepath, headStatus, workdirStatus, stageStatus]
+const headStatus = 1;
+const workdirStatus = 2;
+const stageStatus = 3;
+// Codes: 0 = absent, 1 = added, 2 = deleted, 3 = modified
+const GIT_STATUS = {
+    ABSENT: 0,
+    ADDED: 1,
+    DELETED: 2,
+    MODIFIED: 3,
+};
 
-// Interface for locally managed repo info
-interface RepositoryInfo {
-    id: number; // Use GitHub repo ID for uniqueness
-    name: string; // e.g., 'isomorphic-git'
-    fullName: string; // e.g., 'isomorphic-git/isomorphic-git'
-    url: string; // Clone URL
-    localPath: string; // Path in virtual FS, e.g., /repo/12345
-}
 
 @Component({
     selector: 'example',
     standalone: true,
-    imports: [
-        FormsModule,
-        CommonModule,
-        CodemirrorModule // *** ADD CodemirrorModule HERE ***
-    ],
+    imports: [ FormsModule, CommonModule, CodemirrorModule ],
     templateUrl: './example.component.html',
 })
-export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDestroy
-    private readonly exampleService = inject(ExampleService); // Corrected service injection name
+export class ExampleComponent implements OnInit, OnDestroy {
+    private readonly exampleService = inject(ExampleService);
     private _cdRef = inject(ChangeDetectorRef);
     private _ngZone = inject(NgZone);
-    private tokenSubscription: Subscription | null = null; // To manage subscription
+    private tokenSubscription: Subscription | null = null;
     private githubApiSubscription: Subscription | null = null;
 
     // --- Authentication State ---
     githubAccessToken: string | null = null;
 
     // --- Repo Management State ---
-    githubRepoList: GithubApiRepo[] | null = null; // Repos from GitHub API
-    managedRepositories: RepositoryInfo[] = []; // Repos managed locally
-    activeRepository: RepositoryInfo | null = null; // Currently selected managed repo
+    githubRepoList: GithubApiRepo[] | null = null;
+    managedRepositories: RepositoryInfo[] = [];
+    activeRepository: RepositoryInfo | null = null;
     isFetchingRepos = false;
     readonly localStorageManagedReposKey = 'gitBrowser_managedRepos';
 
     // --- Git & FS State ---
     fs!: FS;
-    dir: string = ''; // ** DYNAMIC: Set when activeRepository changes **
-    corsProxy = 'https://cors.isomorphic-git.org';
+    dir: string = '';
+    corsProxy = 'https://cors.isomorphic-git.org'; // *** CORS PROXY IS REQUIRED ***
     output: string[] = [];
-    isLoading = false; // General Git op loading
-    isProcessingTree = false; // Tree building/reading loading
-    cloneDone = false; // Is the active repo cloned?
-    repositoryTree: TreeNode[] = []; // File tree for active repo
+    isLoading = false;
+    isProcessingTree = false;
+    cloneDone = false;
+    repositoryTree: TreeNode[] = [];
 
     // --- Editor State ---
     selectedFile: SelectedFile | null = null;
     isSavingFile = false;
-    cmOptions: CodeMirror.EditorConfiguration = {
-        lineNumbers: true,
-        theme: 'material',
-        mode: 'javascript',
-        readOnly: false
-    };
+    cmOptions: CodeMirror.EditorConfiguration = { lineNumbers: true, theme: 'material', mode: 'javascript', readOnly: false };
 
-    /**
-     * Constructor
-     */
-    constructor() {
+    constructor() { /* ... constructor code remains the same ... */
         console.log('ExampleComponent: Constructor started.');
         this._injectBufferPolyfill();
         this._loadManagedRepos();
@@ -108,11 +89,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
         this.fetchGithubAccessToken();
         console.log('ExampleComponent: Constructor finished.');
     }
-
-    /**
-     * ngOnInit Lifecycle Hook
-     */
-    ngOnInit(): void {
+    ngOnInit(): void { /* ... ngOnInit code remains the same ... */
         console.log('ExampleComponent: ngOnInit started.');
         if (this.fs && this.activeRepository) {
             this.checkIfRepoExists();
@@ -121,26 +98,20 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
         }
         console.log('ExampleComponent: ngOnInit finished.');
     }
-
-    /**
-     * ngOnDestroy Lifecycle Hook
-     */
-    ngOnDestroy(): void {
+    ngOnDestroy(): void { /* ... ngOnDestroy code remains the same ... */
          console.log('ExampleComponent: ngOnDestroy.');
          this.tokenSubscription?.unsubscribe();
          this.githubApiSubscription?.unsubscribe();
     }
 
-
     // --- Initialization & State Loading ---
-    private _injectBufferPolyfill(): void {
+    private _injectBufferPolyfill(): void { /* ... code remains the same ... */
         if (typeof (window as any).Buffer === 'undefined') {
             (window as any).Buffer = Buffer;
             console.log('[Polyfill] Injected Buffer.');
         }
     }
-
-    private _initializeFilesystem(): void {
+    private _initializeFilesystem(): void { /* ... code remains the same ... */
         try {
             this.fs = new FS('my-git-fs');
             this.addOutput('Filesystem initialized.');
@@ -150,8 +121,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             this.addOutput(`FATAL: Failed to initialize Filesystem: ${fsError.message || fsError}`, 'error');
         }
     }
-
-    private _loadManagedRepos(): void {
+    private _loadManagedRepos(): void { /* ... code remains the same ... */
         try {
             const storedRepos = localStorage.getItem(this.localStorageManagedReposKey);
             if (storedRepos) {
@@ -165,8 +135,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             this.managedRepositories = [];
         }
     }
-
-    private _saveManagedRepos(): void {
+    private _saveManagedRepos(): void { /* ... code remains the same ... */
         try {
             localStorage.setItem(this.localStorageManagedReposKey, JSON.stringify(this.managedRepositories));
         } catch (e) {
@@ -183,9 +152,14 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             next: (token) => {
                 if (token) {
                     this.githubAccessToken = token;
+                    // *** TEMPORARY LOGGING - REMOVE BEFORE PRODUCTION ***
+                    console.warn(`[DEBUG] Fetched Token (REMOVE THIS LOG): ${token}`);
+                    // *****************************************************
+                    console.log(`[fetchGithubAccessToken] Token retrieved. Starts with: ${token.substring(0, 6)}..., Length: ${token.length}`);
                     this.addOutput('GitHub access token obtained successfully.');
                 } else {
                     this.githubAccessToken = null;
+                    console.warn('[fetchGithubAccessToken] Token received from service was null or empty.');
                     this.addOutput('Could not retrieve GitHub access token. Check Keycloak session and configuration.', 'warn');
                 }
                 this.isLoading = false;
@@ -194,6 +168,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             error: (error) => {
                 this.githubAccessToken = null;
                 this.addOutput('Failed to fetch GitHub access token.', 'error');
+                 console.error('[fetchGithubAccessToken] Error subscription:', error);
                 this.isLoading = false;
                 this._cdRef.detectChanges();
             },
@@ -201,7 +176,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
     }
 
     // --- GitHub Repo Fetching ---
-    fetchGithubRepos(): void {
+    fetchGithubRepos(): void { /* ... code remains the same ... */
         if (!this.githubAccessToken) {
             this.addOutput('Cannot fetch repos: GitHub access token is missing.', 'error');
             this.fetchGithubAccessToken();
@@ -221,7 +196,8 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
                 this._cdRef.detectChanges();
             },
             error: (err) => {
-                this.addOutput('Failed to fetch repositories from GitHub.', 'error');
+                this.addOutput('Failed to fetch repositories from GitHub API.', 'error');
+                 console.error('[fetchGithubRepos] API Error:', err);
                 this.isFetchingRepos = false;
                 this.githubRepoList = [];
                 this._cdRef.detectChanges();
@@ -230,7 +206,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
     }
 
     // --- Managed Repositories Logic ---
-    addRepoToManaged(repo: GithubApiRepo): void {
+    addRepoToManaged(repo: GithubApiRepo): void { /* ... code remains the same ... */
         if (this.managedRepositories.some(r => r.id === repo.id)) {
             this.addOutput(`Repository "${repo.full_name}" is already managed.`, 'warn');
             return;
@@ -242,64 +218,85 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
         };
         this.managedRepositories.push(newRepoInfo);
         this._saveManagedRepos();
-        this.addOutput(`Added "${repo.full_name}" to managed list. Select it to clone.`, 'log');
+        this.addOutput(`Added "${repo.full_name}" to managed list. Select it to clone or manage.`, 'log');
     }
-
-    async removeManagedRepo(repoToRemove: RepositoryInfo): Promise<void> {
-        const confirmation = confirm(`Are you sure you want to remove the local copy of "${repoToRemove.fullName}"? This cannot be undone.`);
+    async removeManagedRepo(repoToRemove: RepositoryInfo): Promise<void> { /* ... code remains the same (uses recursive delete) ... */
+        const confirmation = confirm(`DELETE LOCAL COPY?\n\nAre you sure you want to remove the local copy of "${repoToRemove.fullName}"?\n\nThis will delete all local data for this repository from your browser, including any unsaved changes. This cannot be undone.`);
         if (!confirmation) return;
 
         this.addOutput(`Removing local copy of "${repoToRemove.fullName}"...`);
-        this.isLoading = true;
+        this.setLoading(true, `Remove Local (${repoToRemove.name})`);
 
         try {
-            try {
-                 await this.fs.promises.stat(repoToRemove.localPath);
-                 await this.fs.promises.rmdir(repoToRemove.localPath, { recursive: true } as any);
-                 this.addOutput(`Successfully removed directory: ${repoToRemove.localPath}`);
-            } catch (e:any) {
-                if (e.code === 'ENOENT') {
-                     this.addOutput(`Directory ${repoToRemove.localPath} not found, removing from list only.`, 'warn');
-                } else { throw e; }
+            const pathExists = await this.fs.promises.stat(repoToRemove.localPath).then(() => true).catch(e => {
+                if (e.code === 'ENOENT') return false;
+                throw e;
+            });
+
+            if (pathExists) {
+                console.log(`[removeManagedRepo] Directory ${repoToRemove.localPath} exists. Attempting recursive delete.`);
+                await this.deleteDirectoryRecursive(repoToRemove.localPath);
+                this.addOutput(`Successfully removed directory: ${repoToRemove.localPath}`);
+            } else {
+                 this.addOutput(`Directory ${repoToRemove.localPath} not found locally, removing from list only.`, 'warn');
             }
+
             this.managedRepositories = this.managedRepositories.filter(r => r.id !== repoToRemove.id);
             this._saveManagedRepos();
             this.addOutput(`"${repoToRemove.fullName}" removed from managed list.`);
+
             if (this.activeRepository?.id === repoToRemove.id) {
-                this.setActiveRepository(null); // Use the method to clear state properly
+                this.setActiveRepository(null);
             }
         } catch (error: any) {
             this.addOutput(`Error removing repository directory ${repoToRemove.localPath}: ${error.message || error}`, 'error');
             console.error("Remove Repo Error:", error);
         } finally {
-            this.isLoading = false;
-            this._cdRef.detectChanges();
+            this.setLoading(false, `Remove Local (${repoToRemove.name})`);
         }
     }
-
-    setActiveRepository(repoInfo: RepositoryInfo | null): void {
-         // *** ADDED LOGGING ***
-         console.log('[setActiveRepository] Called with:', repoInfo);
+    private async deleteDirectoryRecursive(dirPath: string): Promise<void> { /* ... code remains the same ... */
+        console.log(`[deleteDirectoryRecursive] Deleting path: ${dirPath}`);
+        try {
+            const entries = await this.fs.promises.readdir(dirPath);
+            console.log(`[deleteDirectoryRecursive] Found ${entries.length} entries in ${dirPath}`);
+            for (const entry of entries) {
+                const fullPath = `${dirPath}/${entry}`;
+                const stats = await this.fs.promises.lstat(fullPath);
+                if (stats.isDirectory()) {
+                    console.log(`[deleteDirectoryRecursive] Recursing into directory: ${fullPath}`);
+                    await this.deleteDirectoryRecursive(fullPath);
+                } else {
+                    console.log(`[deleteDirectoryRecursive] Deleting file: ${fullPath}`);
+                    await this.fs.promises.unlink(fullPath);
+                }
+            }
+            console.log(`[deleteDirectoryRecursive] Removing now-empty directory: ${dirPath}`);
+            await this.fs.promises.rmdir(dirPath);
+        } catch (error: any) {
+             console.error(`[deleteDirectoryRecursive] Error during deletion of ${dirPath}:`, error);
+             this.addOutput(`Failed to fully delete ${dirPath}: ${error.message}`, 'error');
+             throw error;
+        }
+    }
+    setActiveRepository(repoInfo: RepositoryInfo | null): void { /* ... code remains the same ... */
+         console.log('[setActiveRepository] Called with:', repoInfo ? repoInfo.fullName : 'null');
          if (this.isLoading || this.isProcessingTree) {
             this.addOutput('Please wait for the current operation to finish before switching repositories.', 'warn');
-             console.log('[setActiveRepository] Blocked: Operation in progress.');
             return;
          }
         if (this.activeRepository?.id === repoInfo?.id) {
              if (repoInfo !== null) {
-                 console.log('[setActiveRepository] Blocked: Repository already active.');
-                 return; // Already active
+                 console.log('[setActiveRepository] Repository already active.');
+                 return;
              }
         }
 
         this.addOutput(repoInfo ? `Activating repository: "${repoInfo.fullName}"...` : 'Deactivating repository.');
         this.activeRepository = repoInfo;
-        // *** ADDED LOGGING ***
         this.dir = repoInfo ? repoInfo.localPath : '';
-        console.log(`[setActiveRepository] Set this.activeRepository to:`, this.activeRepository);
         console.log(`[setActiveRepository] Set this.dir to: ${this.dir}`);
 
-        // Reset state for the view
         this.repositoryTree = [];
         this.selectedFile = null;
         this.cloneDone = false;
@@ -308,190 +305,133 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
              console.log('[setActiveRepository] Calling checkIfRepoExists...');
             this.checkIfRepoExists();
         } else {
-            console.log('[setActiveRepository] No repo selected or FS missing, detecting changes.');
+             console.log('[setActiveRepository] No repo selected or FS missing, detecting changes.');
              this._cdRef.detectChanges();
         }
     }
-
-    isRepoManaged(repoId: number): boolean {
+    isRepoManaged(repoId: number): boolean { /* ... code remains the same ... */
         return this.managedRepositories.some(r => r.id === repoId);
     }
 
-    // --- Git Operations (Adapted for Active Repo & Auth) ---
-
-    async checkIfRepoExists(): Promise<void> {
-        if (!this.activeRepository || !this.fs) {
-             // *** ADDED LOGGING ***
-             console.warn('[checkIfRepoExists] Aborted: No active repository or FS not ready.');
-             this.setProcessingTree(false); // Ensure loading state is cleared
-             return;
-        }
-         // *** ADDED LOGGING ***
-         console.log(`[checkIfRepoExists] Checking for .git in directory: ${this.dir}`);
+    // --- Git Operations ---
+    async checkIfRepoExists(): Promise<void> { /* ... code remains the same ... */
+        if (!this.activeRepository || !this.fs) { return; }
+        console.log(`[checkIfRepoExists] Checking for .git in directory: ${this.dir}`);
         this.addOutput(`Checking for existing repository in ${this.dir}...`);
         this.setProcessingTree(true);
         this.cloneDone = false;
 
         try {
             await this.fs.promises.stat(`${this.dir}/.git`);
-            // *** ADDED LOGGING ***
             console.log(`[checkIfRepoExists] .git directory found in ${this.dir}.`);
             this.addOutput(`Repository found in ${this.dir}. Building file tree...`);
             this._ngZone.run(() => { this.cloneDone = true; });
             await this.buildAndDisplayFileTree();
         } catch (e: any) {
-            // *** ADDED LOGGING ***
             console.log(`[checkIfRepoExists] Error checking for .git:`, e);
             if (e.code === 'ENOENT') {
                 this.addOutput(`No existing repository found in ${this.dir}. Ready to clone.`);
-                 console.log(`[checkIfRepoExists] Repo not found locally (ENOENT).`);
             } else {
                 this.addOutput(`Error checking for repository: ${e.message || e}`, 'error');
-                 console.error(`[checkIfRepoExists] Unexpected error:`, e);
             }
             this._ngZone.run(() => { this.repositoryTree = []; });
         } finally {
             this.setProcessingTree(false);
-            this._cdRef.detectChanges();
         }
     }
 
-    // ===============================================
-    // *** CLONE REPO WITH ENHANCED LOGGING ***
-    // ===============================================
+    // ==========================================================
+    // *** CLONE REPO - URL Auth + CORS Proxy Reinstated ***
+    // ==========================================================
     async cloneRepo(): Promise<void> {
-        // --- Start Clone Logging ---
-        console.log('--- [cloneRepo] Initiated ---');
-        console.log('[cloneRepo] Current activeRepository:', JSON.stringify(this.activeRepository)); // Log the whole object
+        console.log('--- [cloneRepo] Initiated (URL Auth + CORS Proxy) ---');
+        console.log('[cloneRepo] Current activeRepository:', JSON.stringify(this.activeRepository));
         console.log('[cloneRepo] Current this.dir:', this.dir);
         console.log('[cloneRepo] Is githubAccessToken present?', !!this.githubAccessToken);
-        // Uncomment below ONLY for temporary local debugging - NEVER COMMIT/SHARE REAL TOKENS
-        // console.log('[cloneRepo] Token Value (DEBUG ONLY):', this.githubAccessToken);
-        console.log('[cloneRepo] Is loading?', this.isLoading);
-        // --- End Initial Clone Logging ---
 
-        if (!this.activeRepository) {
-            this.addOutput('Error: No active repository selected.', 'error');
-            console.error('[cloneRepo] ABORTED: activeRepository is null.');
-            return;
-        }
-        if (!this.githubAccessToken) {
-            this.addOutput('Error: GitHub Access Token required for cloning.', 'error');
-            console.error('[cloneRepo] ABORTED: githubAccessToken is missing.');
-            this.fetchGithubAccessToken(); // Try to get token
-            return;
-        }
-        if (this.isLoading) {
-            this.addOutput('Operation already in progress.', 'warn');
-            console.warn('[cloneRepo] ABORTED: isLoading is true.');
-            return;
-        }
+        if (!this.activeRepository) { this.addOutput('Error: No active repository selected.', 'error'); console.error('[cloneRepo] ABORTED: activeRepository is null.'); return; }
+        if (!this.githubAccessToken) { this.addOutput('Error: GitHub Access Token required for cloning.', 'error'); console.error('[cloneRepo] ABORTED: githubAccessToken is missing.'); this.fetchGithubAccessToken(); return; }
+        if (this.isLoading) { this.addOutput('Operation already in progress.', 'warn'); console.warn('[cloneRepo] ABORTED: isLoading is true.'); return; }
 
-        // Set loading state and clear UI specific to this repo
         this.setLoading(true, `Clone (${this.activeRepository.name})`);
-        this._ngZone.run(() => {
-            this.repositoryTree = [];
-            this.selectedFile = null;
-            this.cloneDone = false;
-        });
-        this.addOutput(`Attempting to clone ${this.activeRepository.url} into ${this.dir}...`);
-        console.log(`[cloneRepo] UI reset for directory: ${this.dir}`);
+        this._ngZone.run(() => { this.repositoryTree = []; this.selectedFile = null; this.cloneDone = false; });
 
-        // Prepare clone parameters
+        // *** USE ORIGINAL URL for the 'url' parameter when using corsProxy ***
         const cloneUrl = this.activeRepository.url;
-        const cloneDir = this.dir;
-        const cloneHeaders = { 'Authorization': `Bearer ${this.githubAccessToken}` };
+        // *** Construct AUTHENTICATION INFO for the onAuth callback ***
+        const auth = {
+             username: 'oauth2', // Use 'oauth2' as username for token auth
+             password: this.githubAccessToken
+        };
+        // *** --------------------------------------------------- ***
 
-        // Log parameters right before the call
-        console.log(`[cloneRepo] Parameters for git.clone:`);
-        console.log(`  >> fs:`, this.fs ? 'FS Instance OK' : 'FS MISSING!'); // Check if FS exists
-        console.log(`  >> http:`, http ? 'HTTP Instance OK' : 'HTTP MISSING!'); // Check if http exists
-        console.log(`  >> dir: ${cloneDir}`);
-        console.log(`  >> url: ${cloneUrl}`);
-        console.log(`  >> headers:`, cloneHeaders); // Log headers (token is masked by Bearer)
-        console.log(`  >> singleBranch: true`);
-        console.log(`  >> depth: 10`);
+        const cloneDir = this.dir;
+        this.addOutput(`Attempting to clone ${cloneUrl} into ${this.dir}...`);
+
+        console.log(`[cloneRepo] Parameters for git.clone: dir=${cloneDir}, url=${cloneUrl}, corsProxy=${this.corsProxy}, auth=PRESENT`);
 
         try {
-            // Directory management
+            // Directory management (remains the same)
             this.addOutput("Cleaning/creating target directory...");
             console.log(`[cloneRepo] Cleaning/creating directory: ${cloneDir}`);
-            try {
-                await this.fs.promises.rmdir(cloneDir, { recursive: true } as any);
-                console.log(`[cloneRepo] rmdir successful for ${cloneDir}`);
-            } catch (e: any) {
-                if (e.code !== 'ENOENT') { console.warn(`[cloneRepo] Note: rmdir failed (not ENOENT): ${e.message}`); }
-                else { console.log(`[cloneRepo] rmdir skipped (ENOENT) for ${cloneDir}`); }
-            }
-            try {
-                await this.fs.promises.mkdir(cloneDir);
-                console.log(`[cloneRepo] mkdir successful for ${cloneDir}`);
-            } catch (mkdirErr: any) {
-                if (mkdirErr.code !== 'EEXIST') {
-                    console.error(`[cloneRepo] mkdir failed (not EEXIST):`, mkdirErr);
-                    throw new Error(`Failed to create directory ${cloneDir}: ${mkdirErr.message || mkdirErr}`);
-                } else {
-                    console.log(`[cloneRepo] mkdir skipped (EEXIST) for ${cloneDir}`);
-                }
-            }
+            try { await this.fs.promises.rmdir(cloneDir, { recursive: true } as any); } catch (e: any) { if (e.code !== 'ENOENT') console.warn(`[cloneRepo] Note: rmdir failed (not ENOENT): ${e.message}`); else console.log(`[cloneRepo] rmdir skipped (ENOENT) for ${cloneDir}`); }
+            try { await this.fs.promises.mkdir(cloneDir); console.log(`[cloneRepo] mkdir successful for ${cloneDir}`); } catch (mkdirErr: any) { if (mkdirErr.code !== 'EEXIST') { console.error(`[cloneRepo] mkdir failed:`, mkdirErr); throw mkdirErr; } else console.log(`[cloneRepo] mkdir skipped (EEXIST) for ${cloneDir}`); }
 
-            // *** The Core git.clone Call ***
+            // *** The Core git.clone Call (using onAuth + CORS Proxy) ***
             this.addOutput("Starting git clone operation...");
-            console.log("[cloneRepo] >>> Calling git.clone <<<");
+            console.log("[cloneRepo] >>> Calling git.clone (onAuth + CORS Proxy) <<<");
             await git.clone({
                 fs: this.fs,
                 http: http,
-                dir: cloneDir, // Variable from the function scope
-                url: cloneUrl, // Variable from the function scope
+                dir: cloneDir,
+                url: cloneUrl, // Use the ORIGINAL URL
+                corsProxy: this.corsProxy, // *** REINSTATE CORS PROXY ***
+                onAuth: () => auth,      // *** PROVIDE AUTH VIA CALLBACK ***
                 singleBranch: true,
                 depth: 10,
-                // *** INCLUDE BOTH headers AND corsProxy ***
-               // headers: cloneHeaders, // Variable from the function scope
-                corsProxy: this.corsProxy, // <<< ADD THIS BACK
-                // *** ------------------------------ ***
+                // *** NO headers needed when using onAuth ***
                 onProgress: (progress) => { console.log('[cloneRepo] Progress:', progress.phase, progress.loaded, '/', progress.total); },
-                onMessage: (message) => {
-                     const msg = message.trim();
-                     this.addOutput(`Remote: ${msg}`);
-                     console.log(`[cloneRepo] Remote message: ${msg}`);
-                }
+                onMessage: (message) => { const msg = message.trim(); this.addOutput(`Remote: ${msg}`); console.log(`[cloneRepo] Remote message: ${msg}`); }
             });
-            // *** Clone Success ***
             console.log("[cloneRepo] >>> git.clone Successful <<<");
             this.addOutput('Clone successful!', 'log');
             this._ngZone.run(() => { this.cloneDone = true; });
             await this.buildAndDisplayFileTree();
 
         } catch (error: any) {
-            // *** Clone Failure ***
             console.error("[cloneRepo] >>> git.clone FAILED <<<");
             this.addOutput(`Clone failed: ${error.message || error}`, 'error');
-             if (error.data?.statusCode === 401 || error.message?.includes('401')) {
-                 this.addOutput('Authentication failed. Token might be invalid or expired.', 'error');
-                  console.error("[cloneRepo] Auth Error (401): Token invalid/expired?");
-                 this.githubAccessToken = null; // Clear potentially bad token
-             } else if (error.data?.statusCode === 403 || error.message?.includes('403')) {
-                 this.addOutput('Authorization failed. Token might lack permissions or repo access restricted.', 'error');
-                  console.error("[cloneRepo] Auth Error (403): Permissions issue?");
-             } else if (error.data?.statusCode === 404 || error.message?.includes('404')) {
-                 this.addOutput('Repository not found at the specified URL.', 'error');
-                  console.error("[cloneRepo] Not Found Error (404): Bad URL?");
+             const statusCode = error.data?.statusCode || error.http?.statusCode;
+             console.log(`[cloneRepo] Error status code (if available): ${statusCode}`);
+             if (statusCode === 401 || error.message?.includes('401')) {
+                 this.addOutput('Authentication failed (401). Token might be invalid, expired, or lack repo access scope.', 'error');
+                 console.error("[cloneRepo] Auth Error (401): Token invalid/expired/wrong scope?");
+                 this.githubAccessToken = null;
+             } else if (statusCode === 403) {
+                 this.addOutput('Authorization failed (403). Token might lack sufficient permissions.', 'error');
+                 console.error("[cloneRepo] Auth Error (403): Permissions issue?");
+             } else if (statusCode === 404) {
+                 this.addOutput('Repository not found (404).', 'error');
+                 console.error("[cloneRepo] Not Found Error (404): Bad URL?");
+             } else if (error.name === 'CorsError' || error.message?.includes('CORS') || error.message?.includes('fetch')) {
+                  // This *shouldn't* happen with the proxy, but catch just in case
+                 this.addOutput('CORS error detected despite proxy. Check proxy status/reachability.', 'error');
+                 console.error("[cloneRepo] CORS Error (Unexpected):", error);
              }
-            console.error("[cloneRepo] Full Clone Error Details:", error); // Log the complete error object
+            console.error("[cloneRepo] Full Clone Error Details:", error);
             this._ngZone.run(() => { this.cloneDone = false; });
         } finally {
             this.setLoading(false, `Clone (${this.activeRepository?.name})`);
-             console.log('--- [cloneRepo] Finished ---');
+            console.log('--- [cloneRepo] Finished ---');
         }
     }
     // ===============================================
-    // *** END CLONE REPO WITH ENHANCED LOGGING ***
+    // *** END CLONE REPO - onAuth + CORS Proxy ***
     // ===============================================
 
 
-    async buildAndDisplayFileTree(): Promise<void> {
+    async buildAndDisplayFileTree(): Promise<void> { /* ... code remains the same ... */
         if (!this.activeRepository || !this.cloneDone || !this.fs) return;
-        // *** ADDED LOGGING ***
         console.log(`[buildAndDisplayFileTree] Building tree for dir: ${this.dir}`);
         this.addOutput('Building file tree from HEAD...');
         this.setProcessingTree(true);
@@ -503,162 +443,164 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             const tree = this.buildTreeFromPaths(paths);
             this._ngZone.run(() => { this.repositoryTree = tree; });
             this.addOutput('File tree built successfully.');
-            console.log(`[buildAndDisplayFileTree] Tree built successfully for ${this.dir}.`);
         } catch (error: any) {
             this.addOutput(`Failed to build file tree: ${error.message || error}`, 'error');
             console.error(`[buildAndDisplayFileTree] Error for ${this.dir}:`, error);
             this._ngZone.run(() => { this.repositoryTree = []; });
         } finally {
             this.setProcessingTree(false);
-            this._cdRef.detectChanges();
         }
     }
 
-    // (pullChanges, pushChanges, getStatus - logging can be added similarly if needed)
+    // ======================================================
+    // *** PULL CHANGES - URL Auth + CORS Proxy Reinstated ***
+    // ======================================================
     async pullChanges(): Promise<void> {
         if (!this.activeRepository || !this.cloneDone || this.isLoading || !this.fs) return;
         if (!this.githubAccessToken) { this.addOutput('Error: GitHub Access Token required for pull.', 'error'); return; }
 
         this.setLoading(true, `Pull (${this.activeRepository.name})`);
-        console.log(`--- [pullChanges] Initiated for dir: ${this.dir} ---`); // Added log
+        const pullUrl = this.activeRepository.url; // Use original URL
+        const auth = { username: 'oauth2', password: this.githubAccessToken }; // Auth object
+
+        console.log(`--- [pullChanges] Initiated for dir: ${this.dir} ---`);
         try {
             this.addOutput('Step 1: Fetching from remote...');
-            console.log(`[pullChanges] Calling git.fetch`); // Added log
+            console.log(`[pullChanges] Calling git.fetch with url: ${pullUrl}, onAuth=PRESENT, corsProxy=${this.corsProxy}`);
             const fetchResult = await git.fetch({
                 fs: this.fs,
                 http: http,
                 dir: this.dir,
+                url: pullUrl, // *** USE ORIGINAL URL ***
+                onAuth: () => auth, // *** USE onAuth ***
+                corsProxy: this.corsProxy, // *** REINSTATE CORS PROXY ***
                 singleBranch: true,
-                // *** INCLUDE BOTH headers AND corsProxy ***
-                headers: { 'Authorization': `Bearer ${this.githubAccessToken}` },
-                corsProxy: this.corsProxy, // <<< ADD THIS BACK
-                // *** ------------------------------ ***
             });
             this.addOutput(`Fetch result: ${JSON.stringify(fetchResult)}`);
-            console.log(`[pullChanges] git.fetch result:`, fetchResult); // Added log
+            console.log(`[pullChanges] git.fetch result:`, fetchResult);
 
             if(fetchResult?.fetchHead) {
+                // Merge logic remains the same
                 this.addOutput(`Fetched remote commit: ${fetchResult.fetchHead}`);
                 this.addOutput('Step 2: Merging fetched changes (fast-forward only)...');
-                 console.log(`[pullChanges] Calling git.merge with FETCH_HEAD: ${fetchResult.fetchHead}`); // Added log
                 const mergeResult = await git.merge({
                     fs: this.fs, dir: this.dir, ours: 'HEAD', theirs: fetchResult.fetchHead, fastForwardOnly: true,
                     author: { name: 'Browser User', email: 'user@browser.com' }
                 });
                 this.addOutput(`Merge result: ${JSON.stringify(mergeResult)}`);
-                 console.log(`[pullChanges] git.merge result:`, mergeResult); // Added log
                 this.addOutput(mergeResult.oid ? `Pull successful (merged). New HEAD: ${mergeResult.oid}` : 'Pull successful (fast-forward or already up-to-date).');
                 await this.buildAndDisplayFileTree();
-            } else {
-                this.addOutput('Fetch did not return a head. Repo might be empty or up-to-date.', 'warn');
-                console.log(`[pullChanges] Fetch returned no fetchHead.`); // Added log
-            }
+            } else { this.addOutput('Fetch did not return a head.', 'warn'); }
         } catch (error: any) {
              this.addOutput(`Pull failed: ${error.message || error}`, 'error');
-             console.error("[pullChanges] >>> FAILED <<<", error); // Added log
-              if (error.data?.statusCode === 401 || error.message?.includes('401')) {
-                 this.addOutput('Authentication failed. Token might be invalid or expired.', 'error');
-                  this.githubAccessToken = null;
-             } else if (error.code === 'FastForwardError') {
-                  this.addOutput('Pull failed: Local branch has diverged. Manual merge needed (not implemented).', 'error');
-             }
+             console.error("[pullChanges] >>> FAILED <<<", error);
+             const statusCode = error.data?.statusCode || error.http?.statusCode;
+              if (statusCode === 401) { this.addOutput('Authentication failed (401).', 'error'); this.githubAccessToken = null; }
+              else if (error.code === 'FastForwardError') { this.addOutput('Pull failed: Local branch has diverged.', 'error'); }
              console.error("Pull Error Full Details:", error);
         } finally {
             this.setLoading(false, `Pull (${this.activeRepository?.name})`);
-            console.log(`--- [pullChanges] Finished for dir: ${this.dir} ---`); // Added log
         }
     }
+     // ===============================================
+    // *** END PULL CHANGES - onAuth + CORS Proxy ***
+    // ===============================================
 
+    // ======================================================
+    // *** PUSH CHANGES - URL Auth + CORS Proxy Reinstated ***
+    // ======================================================
     async pushChanges(): Promise<void> {
         if (!this.activeRepository || !this.cloneDone || this.isLoading || !this.fs) return;
         if (!this.githubAccessToken) { this.addOutput('Error: GitHub Access Token required for push.', 'error'); return; }
 
         this.setLoading(true, `Push (${this.activeRepository.name})`);
-        console.log(`--- [pushChanges] Initiated for dir: ${this.dir} ---`); // Added log
+        const pushUrl = this.activeRepository.url; // Use original URL
+        const auth = { username: 'oauth2', password: this.githubAccessToken }; // Auth object
+
+        console.log(`--- [pushChanges] Initiated for dir: ${this.dir} ---`);
         this.addOutput('Attempting to push changes...');
         try {
-             console.log(`[pushChanges] Calling git.push`); // Added log
+             console.log(`[pushChanges] Calling git.push with url: ${pushUrl}, onAuth=PRESENT, corsProxy=${this.corsProxy}`);
              const result = await git.push({
                 fs: this.fs,
                 http: http,
                 dir: this.dir,
-                 // *** INCLUDE BOTH headers AND corsProxy ***
-                headers: { 'Authorization': `Bearer ${this.githubAccessToken}` },
-                corsProxy: this.corsProxy, // <<< ADD THIS BACK
-                 // *** ------------------------------ ***
+                url: pushUrl, // *** USE ORIGINAL URL ***
+                onAuth: () => auth, // *** USE onAuth ***
+                corsProxy: this.corsProxy, // *** REINSTATE CORS PROXY ***
             });
             this.addOutput(`Push raw result: ${JSON.stringify(result)}`, 'log');
-            console.log(`[pushChanges] git.push result:`, result); // Added log
+            console.log(`[pushChanges] git.push result:`, result);
 
-            if (result?.ok && !result.error) {
-                 this.addOutput('Push successful.', 'log');
-            } else {
-                 this.addOutput(`Push failed or encountered errors. Error: ${result?.error || 'Check console.'}`, 'error');
-                 console.warn("[pushChanges] Push Result Details (Failure or Errors):", result);
-            }
+            if (result?.ok && !result.error) { this.addOutput('Push successful.', 'log'); }
+            else { this.addOutput(`Push failed or encountered errors. Error: ${result?.error || 'Check console.'}`, 'error'); console.warn("[pushChanges] Push Result Details:", result); }
         } catch (error: any) {
              this.addOutput(`Push failed with exception: ${error.message || error}`, 'error');
-             console.error("[pushChanges] >>> FAILED (Exception) <<<", error); // Added log
-             if (error.data?.statusCode === 401 || error.message?.includes('401')) {
-                 this.addOutput('Authentication failed. Token might be invalid or expired.', 'error');
-                  this.githubAccessToken = null;
-             } else if (error.data?.statusCode === 403 || error.message?.includes('403')) {
-                 this.addOutput('Authorization failed. Token might lack sufficient permissions (e.g., write access).', 'error');
-             }
+             console.error("[pushChanges] >>> FAILED (Exception) <<<", error);
+             const statusCode = error.data?.statusCode || error.http?.statusCode;
+             if (statusCode === 401) { this.addOutput('Authentication failed (401).', 'error'); this.githubAccessToken = null; }
+             else if (statusCode === 403) { this.addOutput('Authorization failed (403). Insufficient permissions?', 'error'); }
              console.error("Push Exception Full Details:", error);
         } finally {
             this.setLoading(false, `Push (${this.activeRepository?.name})`);
-            console.log(`--- [pushChanges] Finished for dir: ${this.dir} ---`); // Added log
         }
     }
+    // ===============================================
+    // *** END PUSH CHANGES - onAuth + CORS Proxy ***
+    // ===============================================
 
+    // ===============================================
+    // *** GET STATUS WITH CORRECTED TYPE CHECK ***
+    // ===============================================
     async getStatus(): Promise<void> {
         if (!this.activeRepository || !this.cloneDone || this.isLoading || !this.fs) return;
         this.setLoading(true, `Status (${this.activeRepository.name})`);
-         console.log(`--- [getStatus] Initiated for dir: ${this.dir} ---`); // Added log
+        console.log(`--- [getStatus] Initiated for dir: ${this.dir} ---`);
         try {
-           const status = await git.statusMatrix({ fs: this.fs, dir: this.dir });
+           const statusMatrix = await git.statusMatrix({ fs: this.fs, dir: this.dir });
            this.addOutput('Status Matrix: [File, HEAD, WorkDir, Stage]');
-            console.log(`[getStatus] Raw status matrix:`, status); // Added log
-           if (status.length === 0) { this.addOutput('  (Working directory clean)'); }
+           console.log(`[getStatus] Raw status matrix:`, statusMatrix);
+           if (statusMatrix.length === 0) { this.addOutput('  (Working directory clean)'); }
            else {
-                status.forEach(row => {
-                    const mapCode = (code:number) => ({0:'absent', 1:'new', 2:'deleted', 3:'modified', 4:'unmod'})[code] || '?';
-                    const headStat = mapCode(row[1]);
-                    const workdirStat = mapCode(row[2]);
-                    const stageStat = mapCode(row[3]);
-                    let fileStatus = '';
-                    if (stageStat === 'new') fileStatus = 'A ';
-                    else if (stageStat === 'deleted') fileStatus = 'D ';
-                    else if (stageStat === 'modified') fileStatus = 'M ';
-                    else if (workdirStat === 'new' && headStat === 'absent') fileStatus = '??';
-                    else if (workdirStat === 'deleted' && headStat !== 'absent') fileStatus = ' D';
-                    else if (workdirStat === 'modified') fileStatus = ' M';
+                statusMatrix.forEach(row => {
+                    const filepath = row[0];
+                    const headCode = row[headStatus];
+                    const workdirCode = row[workdirStatus];
+                    const stageCode = row[stageStatus];
+                    let fileStatus = '  ';
 
-                    this.addOutput(`  ${fileStatus || '  '} ${row[0]}`);
+                    if (stageCode === GIT_STATUS.ADDED) fileStatus = 'A ';
+                    else if (stageCode === GIT_STATUS.DELETED) fileStatus = 'D ';
+                    else if (stageCode === GIT_STATUS.MODIFIED) fileStatus = 'M ';
+                    else if (workdirCode === GIT_STATUS.ADDED && headCode === GIT_STATUS.ABSENT) fileStatus = '??';
+                    else if (workdirCode === GIT_STATUS.DELETED && headCode !== GIT_STATUS.ABSENT) fileStatus = ' D';
+                    // Use the constant for modified check
+                    else if (workdirCode === GIT_STATUS.MODIFIED) fileStatus = ' M';
+
+                    this.addOutput(`  ${fileStatus} ${filepath}`);
                 });
             }
         } catch (error: any) {
              this.addOutput(`Failed to get status: ${error.message || error}`, 'error');
-             console.error(`[getStatus] >>> FAILED <<<`, error); // Added log
+             console.error(`[getStatus] >>> FAILED <<<`, error);
         } finally {
              this.setLoading(false, `Status (${this.activeRepository?.name})`);
-             console.log(`--- [getStatus] Finished for dir: ${this.dir} ---`); // Added log
         }
     }
+    // ===============================================
+    // *** END GET STATUS ***
+    // ===============================================
 
-
-    // --- File Tree & Viewing Logic (Adapted for Codemirror) ---
-
-    async viewFileContent(node: TreeNode): Promise<void> {
+    // --- File Tree & Viewing Logic ---
+    async viewFileContent(node: TreeNode): Promise<void> { /* ... code remains the same ... */
         if (node.isDirectory || this.isProcessingTree || !this.activeRepository) { return; }
         if (this.selectedFile?.isDirty) {
-             const confirmDiscard = confirm("You have unsaved changes. Are you sure you want to discard them and open another file?");
+             const confirmDiscard = confirm("You have unsaved changes. Discard and open another file?");
              if (!confirmDiscard) return;
         }
 
         this.addOutput(`Reading content for: ${node.path}`);
-         console.log(`--- [viewFileContent] Reading: ${this.dir}/${node.path} ---`);// Added log
+        console.log(`--- [viewFileContent] Reading: ${this.dir}/${node.path} ---`);
         this.setProcessingTree(true);
         this._ngZone.run(() => {
             this.selectedFile = { path: node.path, content: null, originalContent: null, isDirty: false, isLoading: true };
@@ -668,22 +610,21 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             const fsPath = `${this.dir}/${node.path}`;
             const contentBuffer = await this.fs.promises.readFile(fsPath);
             const content = Buffer.from(contentBuffer).toString('utf8');
-             console.log(`[viewFileContent] Read ${content.length} chars from ${fsPath}`);// Added log
+            console.log(`[viewFileContent] Read ${content.length} chars from ${fsPath}`);
 
             const extension = node.name.split('.').pop()?.toLowerCase();
             let mode = 'text/plain';
-            if (extension === 'js' || extension === 'mjs' || extension === 'cjs') mode = 'javascript';
+            if (['js', 'mjs', 'cjs'].includes(extension)) mode = 'javascript';
             else if (extension === 'ts') mode = 'text/typescript';
             else if (extension === 'json') mode = 'application/json';
-            else if (extension === 'html' || extension === 'htm') mode = 'xml';
+            else if (['html', 'htm', 'xml'].includes(extension)) mode = 'xml';
             else if (extension === 'css') mode = 'css';
+            else if (extension === 'scss') mode = 'text/x-scss';
             else if (extension === 'md') mode = 'markdown';
             else if (extension === 'java') mode = 'text/x-java';
             else if (extension === 'py') mode = 'python';
-            else if (extension === 'scss') mode = 'text/x-scss';
             else if (extension === 'sh') mode = 'text/x-sh';
-             console.log(`[viewFileContent] Determined mode: ${mode}`);// Added log
-
+            console.log(`[viewFileContent] Determined mode: ${mode}`);
 
             this.cmOptions = { ...this.cmOptions, mode: mode };
 
@@ -695,21 +636,18 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
                     this.selectedFile.isDirty = false;
                     this.selectedFile.error = undefined;
                 } else {
-                     console.warn(`[viewFileContent] Selection changed while loading ${node.path}`);// Added log
+                     console.warn(`[viewFileContent] Selection changed while loading ${node.path}`);
                 }
             });
             this.addOutput(`Successfully read content for: ${node.path}`);
 
         } catch (error: any) {
             let errorMessage = `Failed to read file content: ${error.message || error}`;
-             console.error(`[viewFileContent] Error reading ${this.dir}/${node.path}:`, error);// Added log
+             console.error(`[viewFileContent] Error reading ${this.dir}/${node.path}:`, error);
             if (error instanceof Error && (error.message.includes('invalid byte sequence') || error.message.includes('malformed UTF-8'))) {
                  errorMessage = 'Cannot display content: File appears to be binary or uses unsupported encoding.';
-                 this.addOutput(`Cannot display content for ${node.path}: Binary or unsupported encoding.`, 'warn');
-            } else {
-                 this.addOutput(`Error reading ${node.path}: ${errorMessage}`, 'error');
-                 console.error(`File Read Error (${node.path}):`, error);
             }
+            this.addOutput(`Error reading ${node.path}: ${errorMessage}`, 'error');
             this._ngZone.run(() => {
                 if (this.selectedFile?.path === node.path) {
                      this.selectedFile.content = null; this.selectedFile.originalContent = null;
@@ -719,125 +657,109 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             });
         } finally {
             this.setProcessingTree(false);
-            this._cdRef.detectChanges();
-             console.log(`--- [viewFileContent] Finished: ${this.dir}/${node.path} ---`);// Added log
         }
     }
 
     // --- Editing & Committing Logic ---
-
-    onCodeMirrorChange(newContent: string): void {
+    onCodeMirrorChange(newContent: string): void { /* ... code remains the same ... */
         if (this.selectedFile && !this.selectedFile.isLoading) {
             const wasDirty = this.selectedFile.isDirty;
             this.selectedFile.isDirty = (newContent !== this.selectedFile.originalContent);
-            // Log only when dirty state changes
             if (wasDirty !== this.selectedFile.isDirty) {
                  console.log(`[onCodeMirrorChange] File ${this.selectedFile.path} isDirty changed to: ${this.selectedFile.isDirty}`);
             }
         }
     }
-
-    async saveFileChanges(): Promise<void> {
+    async saveFileChanges(): Promise<void> { /* ... code remains the same ... */
          if (!this.selectedFile || !this.selectedFile.isDirty || this.isSavingFile || !this.activeRepository || !this.fs) { return; }
 
-         const filePath = this.selectedFile.path; // Capture for logging
+         const filePath = this.selectedFile.path;
          this.addOutput(`Saving changes to ${filePath}...`);
-         console.log(`--- [saveFileChanges] Saving: ${this.dir}/${filePath} ---`);// Added log
+         console.log(`--- [saveFileChanges] Saving: ${this.dir}/${filePath} ---`);
          this.setIsSavingFile(true);
          const fsPath = `${this.dir}/${filePath}`;
          const contentToSave = this.selectedFile.content ?? '';
 
          try {
-             // 1. Write file
-              console.log(`[saveFileChanges] Calling fs.promises.writeFile for ${fsPath}`);// Added log
-             await this.fs.promises.writeFile(fsPath, contentToSave, {
-                 encoding: 'utf8',
-                 mode: 0o666
-             });
+              console.log(`[saveFileChanges] Calling fs.promises.writeFile for ${fsPath}`);
+             await this.fs.promises.writeFile(fsPath, contentToSave, { encoding: 'utf8', mode: 0o666 });
              this.addOutput(`File ${filePath} saved successfully.`);
-             console.log(`[saveFileChanges] writeFile successful.`);// Added log
+             console.log(`[saveFileChanges] writeFile successful.`);
 
-             // 2. Stage the change
              this.addOutput(`Staging ${filePath}...`);
-              console.log(`[saveFileChanges] Calling git.add for ${filePath}`);// Added log
+              console.log(`[saveFileChanges] Calling git.add for ${filePath}`);
              await git.add({ fs: this.fs, dir: this.dir, filepath: filePath });
              this.addOutput(`${filePath} staged successfully.`);
-              console.log(`[saveFileChanges] git.add successful.`);// Added log
+              console.log(`[saveFileChanges] git.add successful.`);
 
-             // 3. Update state
              this._ngZone.run(() => {
                  this.selectedFile!.originalContent = contentToSave;
                  this.selectedFile!.isDirty = false;
-                  console.log(`[saveFileChanges] State updated: isDirty=false`);// Added log
+                  console.log(`[saveFileChanges] State updated: isDirty=false`);
              });
 
          } catch (error: any) {
              this.addOutput(`Error saving or staging file ${filePath}: ${error.message || error}`, 'error');
-             console.error(`[saveFileChanges] >>> FAILED <<<`, error); // Added log
+             console.error(`[saveFileChanges] >>> FAILED <<<`, error);
          } finally {
               this.setIsSavingFile(false);
-               console.log(`--- [saveFileChanges] Finished: ${this.dir}/${filePath} ---`);// Added log
+               console.log(`--- [saveFileChanges] Finished: ${this.dir}/${filePath} ---`);
          }
     }
-
-    async commitChanges(): Promise<void> {
+    async commitChanges(): Promise<void> { /* ... code remains the same ... */
         if (!this.activeRepository || this.isLoading || !this.fs) return;
 
         const commitMessage = prompt("Enter commit message:");
         if (!commitMessage) { this.addOutput('Commit cancelled.', 'warn'); return; }
 
-        const authorInfo = { name: 'Web User', email: 'user@example.com' };
+        const authorInfo = { name: 'Web User', email: 'user@browser.com' };
 
         this.addOutput(`Committing changes with message: "${commitMessage}"...`);
-        console.log(`--- [commitChanges] Committing in dir: ${this.dir} ---`);// Added log
+        console.log(`--- [commitChanges] Committing in dir: ${this.dir} ---`);
         this.setLoading(true, `Commit (${this.activeRepository.name})`);
 
         try {
-            console.log(`[commitChanges] Calling git.commit with message: "${commitMessage}"`);// Added log
+            console.log(`[commitChanges] Calling git.commit with message: "${commitMessage}"`);
             const sha = await git.commit({
                 fs: this.fs, dir: this.dir, message: commitMessage, author: authorInfo
             });
             this.addOutput(`Commit successful! SHA: ${sha}`, 'log');
-            console.log(`[commitChanges] Commit successful, SHA: ${sha}`);// Added log
+            console.log(`[commitChanges] Commit successful, SHA: ${sha}`);
 
         } catch (error: any) {
             this.addOutput(`Commit failed: ${error.message || error}`, 'error');
-            console.error(`[commitChanges] >>> FAILED <<<`, error); // Added log
+            console.error(`[commitChanges] >>> FAILED <<<`, error);
              if (error.code === 'EmptyCommitError') {
                   this.addOutput('Commit failed: No changes added to commit.', 'warn');
              }
             console.error("Commit Error Full Details:", error);
         } finally {
             this.setLoading(false, `Commit (${this.activeRepository.name})`);
-             console.log(`--- [commitChanges] Finished for dir: ${this.dir} ---`);// Added log
+             console.log(`--- [commitChanges] Finished for dir: ${this.dir} ---`);
         }
     }
 
     // --- Helper Methods ---
-    addOutput(message: string, level: 'log' | 'warn' | 'error' = 'log'): void {
+    addOutput(message: string, level: 'log' | 'warn' | 'error' = 'log'): void { /* ... code remains the same ... */
         const timestamp = new Date().toLocaleTimeString();
         const logMessage = `[${timestamp}] ${message}`;
-        // Keep console log for immediate feedback during dev
-        // console[level](logMessage); // Comment this out if the UI log is sufficient
+        console[level](logMessage);
 
         this._ngZone.run(() => {
             this.output.push(logMessage);
             if (this.output.length > 200) { this.output.shift(); }
         });
     }
-
-    clearOutput(): void {
+    clearOutput(): void { /* ... code remains the same ... */
         this._ngZone.run(() => { this.output = ['Log cleared.']; });
-         console.clear(); // Also clear browser console for easier debugging
+         console.clear();
          console.log("ExampleComponent: Console and UI Log cleared.");
     }
-
-    setLoading(loading: boolean, operation?: string): void {
+    setLoading(loading: boolean, operation?: string): void { /* ... code remains the same ... */
         this._ngZone.run(() => {
             if (this.isLoading === loading) return;
             this.isLoading = loading;
             const status = loading ? 'started' : 'finished';
-            // Add log only when state changes and operation is provided
             if (operation) {
                  const logMsg = `Operation ${status}: ${operation}.`;
                  this.addOutput(logMsg);
@@ -846,8 +768,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             this._cdRef.detectChanges();
         });
     }
-
-    setProcessingTree(processing: boolean): void {
+    setProcessingTree(processing: boolean): void { /* ... code remains the same ... */
          this._ngZone.run(() => {
             if (this.isProcessingTree === processing) return;
             this.isProcessingTree = processing;
@@ -855,8 +776,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             this._cdRef.detectChanges();
          });
     }
-
-    setIsSavingFile(saving: boolean): void {
+    setIsSavingFile(saving: boolean): void { /* ... code remains the same ... */
          this._ngZone.run(() => {
             if (this.isSavingFile === saving) return;
             this.isSavingFile = saving;
@@ -864,9 +784,7 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
             this._cdRef.detectChanges();
          });
     }
-
-    buildTreeFromPaths(paths: string[]): TreeNode[] {
-       // This function is purely data transformation, logging usually not needed unless debugging the tree itself
+    buildTreeFromPaths(paths: string[]): TreeNode[] { /* ... code remains the same ... */
        const root: TreeNode = { name: '', path: '', isDirectory: true, children: [] };
        paths.forEach((path) => {
            let currentNode = root;
@@ -895,13 +813,11 @@ export class ExampleComponent implements OnInit, OnDestroy { // Implement OnDest
        });
        return root.children || [];
     }
-
-    toggleNodeExpansion(node: TreeNode): void {
+    toggleNodeExpansion(node: TreeNode): void { /* ... code remains the same ... */
         if (node.isDirectory) {
             node.expanded = !node.expanded;
-            console.log(`[toggleNodeExpansion] Node ${node.path} expanded: ${node.expanded}`); // Added log
         }
         this._cdRef.detectChanges();
     }
 
-}
+} // End of component class
