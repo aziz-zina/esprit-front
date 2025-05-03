@@ -3,6 +3,7 @@ import { AuthGuard } from '@core/auth/guards/auth.guard';
 import { NoAuthGuard } from '@core/auth/guards/noAuth.guard';
 import { initialDataResolver } from './app.resolvers';
 import { LayoutComponent } from './layout/layout.component';
+import { ExampleComponent } from './modules/admin/example/example.component'; // Import ExampleComponent
 
 // @formatter:off
 
