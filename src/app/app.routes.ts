@@ -3,10 +3,16 @@ import { AuthGuard } from '@core/auth/guards/auth.guard';
 import { NoAuthGuard } from '@core/auth/guards/noAuth.guard';
 import { initialDataResolver } from './app.resolvers';
 import { LayoutComponent } from './layout/layout.component';
+import { ExampleComponent } from './modules/admin/example/example.component'; // Import ExampleComponent
 
 // @formatter:off
 
 export const appRoutes: Route[] = [
+    // Temporary route for testing ExampleComponent display
+    {
+        path: 'test-example',
+        component: ExampleComponent,
+    },
     { path: '', pathMatch: 'full', redirectTo: 'landing' },
 
     // Landing routes

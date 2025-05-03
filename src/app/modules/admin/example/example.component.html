@@ -1,9 +1,155 @@
+<!-- Outer Fuse structure -->
 <div class="flex min-w-0 flex-auto flex-col">
-    <!-- Main -->
     <div class="flex-auto p-6 sm:p-10">
+
         <!-- CONTENT GOES HERE -->
-        <div
-            class="h-400 max-h-400 min-h-400 rounded-2xl border-2 border-dashed border-gray-300"
-        ></div>
-    </div>
-</div>
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+            <!-- Left Column: Controls & File Tree -->
+            <div class="space-y-6 lg:col-span-1">
+
+                <!-- Isomorphic Git Controls Section -->
+                <div class="rounded-lg border border-gray-300 bg-gray-50 p-4 shadow-sm">
+                    <h2 class="mb-4 text-xl font-semibold text-gray-800">Git Controls</h2>
+
+                    <!-- Repository URL Input -->
+                    <div class="mb-4">
+                        <label for="repoUrl" class="mb-1 block text-sm font-medium text-gray-700">Repository URL (Public HTTPS):</label>
+                        <input
+                            type="text" id="repoUrl" [(ngModel)]="repoUrl" [disabled]="isLoading"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:bg-gray-100"
+                            placeholder="Enter public HTTPS Git repository URL here" />
+                        <p class="mt-1 text-xs text-gray-500">
+                            Using CORS proxy: <code class="text-xs">{{ corsProxy }}</code>
+                        </p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mb-4 flex flex-wrap gap-3">
+                        <button type="button" (click)="cloneRepo()" [disabled]="isLoading" class="btn-primary disabled:opacity-50">
+                            {{ cloneDone ? 'Re-Clone' : 'Clone Repo' }}
+                        </button>
+                        <button type="button" (click)="pullChanges()" [disabled]="isLoading || !cloneDone" class="btn-secondary disabled:opacity-50">
+                            Pull
+                        </button>
+                        <button type="button" (click)="pushChanges()" [disabled]="isLoading || !cloneDone" class="btn-secondary disabled:opacity-50" title="Needs Auth">
+                            Push
+                        </button>
+                        <button type="button" (click)="getStatus()" [disabled]="isLoading || !cloneDone" class="btn-secondary disabled:opacity-50">
+                            Status
+                        </button>
+                    </div>
+                    <!-- Loading Indicator -->
+                    <div *ngIf="isLoading" class="loading-indicator">Processing Git operation...</div>
+                </div> <!-- End Git Controls Section -->
+
+                <!-- File Tree Display Section -->
+                <div class="rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+                    <div class="mb-3 flex items-center justify-between">
+                        <h3 class="text-lg font-semibold text-gray-700">Repository Files (HEAD)</h3>
+                        <button type="button" (click)="buildAndDisplayFileTree()" [disabled]="isLoading || isProcessingTree || !cloneDone" class="btn-secondary btn-xs disabled:opacity-50">
+                            {{ isProcessingTree ? 'Loading...' : 'Refresh Tree' }}
+                        </button>
+                    </div>
+
+                    <div *ngIf="!cloneDone" class="text-sm text-gray-500">Clone a repository to see files.</div>
+                    <div *ngIf="cloneDone && isProcessingTree && repositoryTree.length === 0" class="text-sm text-gray-500">Loading file tree...</div>
+                    <div *ngIf="cloneDone && !isProcessingTree && repositoryTree.length === 0" class="text-sm text-gray-500">
+                        No files found in HEAD or repository seems empty.
+                    </div>
+
+                    <!-- Recursive Tree Structure -->
+                    <div *ngIf="cloneDone && repositoryTree.length > 0" class="max-h-96 overflow-y-auto text-sm">
+                        <!-- Pass the root nodes to the recursive template -->
+                        <ng-container *ngTemplateOutlet="treeNodeTemplate; context: { nodes: repositoryTree, level: 0 }"></ng-container>
+                    </div>
+                </div> <!-- End File Tree Section -->
+
+            </div> <!-- End Left Column -->
+
+            <!-- Right Column: File Content & Output Log -->
+            <div class="space-y-6 lg:col-span-2">
+
+                <!-- File Content Viewer -->
+                <div class="rounded-lg border border-gray-300 bg-white p-4 shadow-sm min-h-[200px]">
+                    <h3 class="mb-3 text-lg font-semibold text-gray-700">File Content</h3>
+                    <div *ngIf="!selectedFile" class="text-sm text-gray-500">Select a file from the tree to view its content.</div>
+
+                    <div *ngIf="selectedFile">
+                        <div class="mb-2 font-mono text-sm font-semibold text-indigo-700">{{ selectedFile.path }}</div>
+                        <div *ngIf="selectedFile.isLoading" class="loading-indicator">Loading content...</div>
+                        <div *ngIf="selectedFile.error" class="text-red-600 text-sm p-2 border border-red-300 bg-red-50 rounded">
+                           Error: {{ selectedFile.error }}
+                        </div>
+                        <pre *ngIf="selectedFile.content !== null && !selectedFile.isLoading && !selectedFile.error"
+                             class="max-h-[500px] overflow-auto rounded bg-gray-900 p-3 text-xs font-mono leading-relaxed text-gray-100 shadow-inner whitespace-pre-wrap break-words"><code>{{ selectedFile.content }}</code></pre>
+                    </div>
+                </div> <!-- End File Content Viewer -->
+
+
+                <!-- Output Log Section -->
+                <div class="rounded-lg border border-gray-300 bg-gray-100 p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-lg font-semibold text-gray-700">Output Log</h3>
+                        <button type="button" (click)="clearOutput()" [disabled]="isLoading || isProcessingTree" class="btn-secondary btn-xs disabled:opacity-50">
+                            Clear Log
+                        </button>
+                    </div>
+                    <pre class="h-60 max-h-80 min-h-40 overflow-y-auto rounded bg-white p-3 text-xs font-mono leading-relaxed shadow-inner">{{ output.length > 0 ? output.join('\n') : 'No output yet.' }}</pre>
+                </div> <!-- End Output Log Section -->
+
+            </div> <!-- End Right Column -->
+
+        </div> <!-- End Grid -->
+    </div> <!-- End Main Content Area -->
+</div> <!-- End Outer Fuse structure -->
+
+
+<!-- ======================= -->
+<!-- Recursive Tree Template -->
+<!-- ======================= -->
+<ng-template #treeNodeTemplate let-nodes="nodes" let-level="level">
+    <ul class="list-none p-0 m-0">
+        <li *ngFor="let node of nodes" class="my-1">
+            <div class="flex items-center cursor-pointer hover:bg-gray-100 rounded p-1"
+                 [style.padding-left.rem]="level * 1.2"
+                 (click)="node.isDirectory ? toggleNodeExpansion(node) : viewFileContent(node)"
+                 [class.bg-indigo-100]="selectedFile?.path === node.path && !node.isDirectory"
+                 [title]="node.path">
+
+                <!-- Folder/File Icon & Expander -->
+                <ng-container *ngIf="node.isDirectory">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-blue-600 flex-shrink-0 transition-transform duration-150" [class.rotate-90]="node.expanded" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-yellow-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                </ng-container>
+                <ng-container *ngIf="!node.isDirectory">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-gray-500 flex-shrink-0 ml-[1rem]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"> <!-- Indent file icon -->
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                </ng-container>
+
+                <!-- Name -->
+                <span class="truncate">{{ node.name }}</span>
+            </div>
+
+            <!-- Recursive Call for Children -->
+            <div *ngIf="node.isDirectory && node.expanded && node.children && node.children.length > 0">
+                <ng-container *ngTemplateOutlet="treeNodeTemplate; context: { nodes: node.children, level: level + 1 }"></ng-container>
+            </div>
+        </li>
+    </ul>
+</ng-template>
+
+<!-- Helper CSS (Minimal, use Tailwind where possible) -->
+<style>
+    .btn-primary { @apply inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2; }
+    .btn-secondary { @apply inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2; }
+    .btn-xs { @apply px-2.5 py-1.5 text-xs; }
+    .loading-indicator { @apply my-3 flex items-center text-sm text-blue-600; }
+    /* Add SVG spinner styles if needed, or use Tailwind spin */
+    .loading-indicator svg { @apply animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500; }
+</style>
