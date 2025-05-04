@@ -125,7 +125,18 @@
   "node_modules/codemirror/mode/typescript/typescript.js",
   "node_modules/codemirror/mode/css/css.js",
   "node_modules/codemirror/mode/xml/xml.js",  
-  "node_modules/codemirror/mode/markdown/markdown.js"],
+  "node_modules/codemirror/mode/markdown/markdown.js",
+  "node_modules/codemirror/mode/javascript/javascript.js",
+  "node_modules/codemirror/mode/typescript/typescript.js",
+  "node_modules/codemirror/mode/css/css.js",
+  "node_modules/codemirror/mode/xml/xml.js",
+  "node_modules/codemirror/mode/markdown/markdown.js",
+  "node_modules/codemirror/mode/python/python.js",
+  "node_modules/codemirror/mode/clike/clike.js", 
+  "node_modules/codemirror/mode/shell/shell.js",
+  "node_modules/codemirror/mode/yaml/yaml.js",
+  "node_modules/codemirror/mode/sql/sql.js"
+],
             "builderMode": "browser"
           }
         }
