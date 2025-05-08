@@ -3,7 +3,6 @@ import { AuthGuard } from '@core/auth/guards/auth.guard';
 import { NoAuthGuard } from '@core/auth/guards/noAuth.guard';
 import { initialDataResolver } from './app.resolvers';
 import { LayoutComponent } from './layout/layout.component';
-import { ExampleComponent } from './modules/admin/example/example.component'; // Import ExampleComponent
 
 // @formatter:off
 
@@ -36,14 +35,15 @@ export const appRoutes: Route[] = [
             initialData: initialDataResolver,
         },
         data: {
-            roles: ['admin', 'student'],
+            role: 'admin',
+            layout: 'classic',
         },
 
         children: [
             {
-                path: 'example',
+                path: 'example-admin',
                 data: {
-                    roles: ['admin', 'student'],
+                    role: 'admin',
                 },
 
                 loadChildren: () =>
@@ -53,14 +53,14 @@ export const appRoutes: Route[] = [
                 path: 'users',
                 title: 'routes.users.teachers.title',
                 data: {
-                    roles: ['admin', 'student'],
+                    role: 'admin',
                 },
                 children: [
                     {
                         path: 'admins',
                         title: 'routes.users.admins.title',
                         data: {
-                            roles: ['admin', 'student'],
+                            role: 'admin',
                         },
                         loadChildren: () =>
                             import(
@@ -84,6 +84,29 @@ export const appRoutes: Route[] = [
                             ),
                     },
                 ],
+            },
+        ],
+    },
+    // User routes
+    {
+        path: '',
+        canActivate: [AuthGuard],
+        canActivateChild: [AuthGuard],
+        data: {
+            role: 'student',
+            layout: 'modern',
+        },
+        component: LayoutComponent,
+        resolve: {
+            initialData: initialDataResolver,
+        },
+        children: [
+            {
+                path: 'example',
+                data: {
+                    role: 'student',
+                },
+                loadChildren: () => import('./modules/example/example.routes'),
             },
         ],
     },
