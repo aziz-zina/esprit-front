@@ -25,13 +25,9 @@ const isAccessAllowed = async (
             realmRoles.includes(role)
         );
 
-    console.log(requiredRole);
-
     if (authenticated && hasRequiredRole(requiredRole)) {
         return true;
     }
-
-    console.log('im here');
 
     const router = inject(Router);
     return router.parseUrl('/example');

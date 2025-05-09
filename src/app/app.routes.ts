@@ -41,13 +41,22 @@ export const appRoutes: Route[] = [
 
         children: [
             {
-                path: 'example-admin',
+                path: 'dashboards',
                 data: {
                     role: 'admin',
                 },
-
-                loadChildren: () =>
-                    import('./modules/admin/example/example.routes'),
+                children: [
+                    {
+                        path: 'analytics',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/dashboards/analytics/analytics.routes'
+                            ),
+                    },
+                ],
             },
             {
                 path: 'users',

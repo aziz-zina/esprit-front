@@ -26,6 +26,14 @@
             <mat-icon [svgIcon]="'heroicons_outline:cog-8-tooth'"></mat-icon>
             <span>{{ t('settings') }}</span>
         </button>
+        @if (isAdmin()) {
+            <button mat-menu-item [routerLink]="'/dashboards/analytics'">
+                <mat-icon
+                    [svgIcon]="'heroicons_outline:cog-8-tooth'"
+                ></mat-icon>
+                <span>{{ t('dashboard') }}</span>
+            </button>
+        }
 
         <mat-divider class="my-2"></mat-divider>
         <button mat-menu-item (click)="signOut()">
