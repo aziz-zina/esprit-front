@@ -80,6 +80,13 @@ export class UserService {
         });
     }
 
+    getAllUsersByRole(role: Role): Observable<User[]> {
+        const params = new HttpParams().set('role', role);
+        return this._httpClient.get<User[]>(`${this.API_URL}/users/all`, {
+            params,
+        });
+    }
+
     toggleUserStatus(userId: string): Observable<boolean> {
         return this._httpClient.put<boolean>(
             `${this.API_URL}/users/toggle/${userId}`,

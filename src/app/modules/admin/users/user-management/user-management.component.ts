@@ -71,7 +71,6 @@ import { UserFormComponent } from '../user-form/user-form.component';
         MatSelectModule,
     ],
     templateUrl: './user-management.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserManagementComponent implements OnInit {
     // -----------------------------------------------------------------------------------------------------

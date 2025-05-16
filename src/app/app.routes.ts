@@ -56,6 +56,16 @@ export const appRoutes: Route[] = [
                                 'app/modules/admin/dashboards/analytics/analytics.routes'
                             ),
                     },
+                    {
+                        path: 'project',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/dashboards/project/project.routes'
+                            ),
+                    },
                 ],
             },
             {
@@ -82,6 +92,56 @@ export const appRoutes: Route[] = [
                         loadChildren: () =>
                             import(
                                 'app/modules/admin/users/teachers/teachers.routes'
+                            ),
+                    },
+                    {
+                        path: 'students',
+                        title: 'routes.users.students.title',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/users/students/students.routes'
+                            ),
+                    },
+                ],
+            },
+            {
+                path: 'academic',
+                title: 'routes.academic.title',
+                data: {
+                    role: 'admin',
+                },
+                children: [
+                    {
+                        path: 'academic-years',
+                        title: 'routes.users.academic-years.title',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/academic/academic-years/academic-years.routes'
+                            ),
+                    },
+                    {
+                        path: 'teachers',
+                        title: 'routes.users.teachers.title',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/academic/classrooms/classrooms.routes'
+                            ),
+                    },
+                    {
+                        path: 'subjects',
+                        title: 'routes.users.teachers.title',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/academic/subjects/subjects.routes'
                             ),
                     },
                     {
