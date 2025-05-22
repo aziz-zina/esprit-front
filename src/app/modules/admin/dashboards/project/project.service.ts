@@ -1,18 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { APP_API_URL } from 'app/app.config';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { Commit, ProjectStats } from './project.types';
 
-@Injectable({providedIn: 'root'})
-export class ProjectService
-{
+@Injectable({ providedIn: 'root' })
+export class ProjectService {
+    private readonly _httpClient = inject(HttpClient);
+    private readonly API_URL = inject(APP_API_URL);
     private _data: BehaviorSubject<any> = new BehaviorSubject(null);
-
-    /**
-     * Constructor
-     */
-    constructor(private _httpClient: HttpClient)
-    {
-    }
 
     // -----------------------------------------------------------------------------------------------------
     // @ Accessors
@@ -21,8 +17,7 @@ export class ProjectService
     /**
      * Getter for data
      */
-    get data$(): Observable<any>
-    {
+    get data$(): Observable<any> {
         return this._data.asObservable();
     }
 
@@ -33,13 +28,27 @@ export class ProjectService
     /**
      * Get data
      */
-    getData(): Observable<any>
-    {
+    getData(): Observable<any> {
         return this._httpClient.get('api/dashboards/project').pipe(
-            tap((response: any) =>
-            {
+            tap((response: any) => {
                 this._data.next(response);
-            }),
+            })
+        );
+    }
+
+    getRepositories(): Observable<string[]> {
+        return this._httpClient.get<string[]>(`${this.API_URL}/repos`);
+    }
+
+    getStats(repoName: string): Observable<ProjectStats> {
+        return this._httpClient.get<any>(
+            `${this.API_URL}/repos/${repoName}/statistics`
+        );
+    }
+
+    getCommits(repoName: string): Observable<Commit[]> {
+        return this._httpClient.get<Commit[]>(
+            `${this.API_URL}/repos/${repoName}/commits?limit=7`
         );
     }
 }
