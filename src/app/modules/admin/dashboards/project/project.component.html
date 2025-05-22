@@ -297,9 +297,8 @@
                                         <div class="text-secondary font-medium">
                                             New vs. Merged
                                         </div>
-                                        @if (projectStats) {
+                                        @if (projectStats()) {
                                             <div
-                                                *ngIf="projectStats"
                                                 class="flex flex-auto flex-col"
                                             >
                                                 @if (chartGithubIssues) {
@@ -352,7 +351,7 @@
                                 </div>
                             </div>
                             <!-- Task distribution -->
-                            <!-- <div
+                            <div
                                 class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow sm:col-span-2 md:col-span-4 lg:col-span-2"
                             >
                                 <div
@@ -361,76 +360,53 @@
                                     <div
                                         class="truncate text-lg font-medium leading-6 tracking-tight"
                                     >
-                                        Task Distribution
+                                        Commits by Contributor
                                     </div>
                                 </div>
-                                <div class="mt-6 flex flex-auto flex-col">
-                                    <apx-chart
-                                        class="h-80 w-full flex-auto"
-                                        [chart]="chartTaskDistribution.chart"
-                                        [labels]="chartTaskDistribution.labels"
-                                        [legend]="chartTaskDistribution.legend"
-                                        [plotOptions]="
-                                            chartTaskDistribution.plotOptions
-                                        "
-                                        [series]="
-                                            chartTaskDistribution.series[
-                                                taskDistributionWeekSelector
-                                                    .value
-                                            ]
-                                        "
-                                        [states]="chartTaskDistribution.states"
-                                        [stroke]="chartTaskDistribution.stroke"
-                                        [theme]="chartTaskDistribution.theme"
-                                        [tooltip]="
-                                            chartTaskDistribution.tooltip
-                                        "
-                                        [yaxis]="chartTaskDistribution.yaxis"
-                                    ></apx-chart>
-                                </div>
-                                <div
-                                    class="-m-6 mt-4 grid grid-cols-2 divide-x border-t bg-gray-50 dark:bg-transparent"
-                                >
-                                    <div
-                                        class="flex flex-col items-center justify-center p-6 sm:p-8"
-                                    >
-                                        <div
-                                            class="text-5xl font-semibold leading-none tracking-tighter"
-                                        >
-                                            {{
-                                                data.taskDistribution.overview[
-                                                    taskDistributionWeekSelector
-                                                        .value
-                                                ]['new']
-                                            }}
-                                        </div>
-                                        <div
-                                            class="text-secondary mt-1 text-center"
-                                        >
-                                            New tasks
-                                        </div>
+                                @if (projectStats()) {
+                                    <div class="mt-6 flex flex-auto flex-col">
+                                        @if (chartCommitsByContributor) {
+                                            <apx-chart
+                                                *ngIf="
+                                                    chartCommitsByContributor
+                                                "
+                                                class="h-80 w-full flex-auto"
+                                                [chart]="
+                                                    chartCommitsByContributor?.chart
+                                                "
+                                                [labels]="
+                                                    chartCommitsByContributor?.labels
+                                                "
+                                                [legend]="
+                                                    chartCommitsByContributor?.legend
+                                                "
+                                                [plotOptions]="
+                                                    chartCommitsByContributor?.plotOptions
+                                                "
+                                                [series]="
+                                                    chartCommitsByContributor?.series
+                                                "
+                                                [states]="
+                                                    chartCommitsByContributor?.states
+                                                "
+                                                [stroke]="
+                                                    chartCommitsByContributor?.stroke
+                                                "
+                                                [theme]="
+                                                    chartCommitsByContributor?.theme
+                                                "
+                                                [tooltip]="
+                                                    chartCommitsByContributor?.tooltip
+                                                "
+                                                [yaxis]="
+                                                    chartCommitsByContributor?.yaxis
+                                                "
+                                            ></apx-chart>
+                                        }
                                     </div>
-                                    <div
-                                        class="flex flex-col items-center justify-center p-6 sm:p-8"
-                                    >
-                                        <div
-                                            class="text-5xl font-semibold leading-none tracking-tighter"
-                                        >
-                                            {{
-                                                data.taskDistribution.overview[
-                                                    taskDistributionWeekSelector
-                                                        .value
-                                                ]['completed']
-                                            }}
-                                        </div>
-                                        <div
-                                            class="text-secondary mt-1 text-center"
-                                        >
-                                            Completed tasks
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> -->
+                                }
+                            </div>
+
                             <!-- Commit history -->
                             <div
                                 class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow sm:col-span-2 md:col-span-4 lg:col-span-2"

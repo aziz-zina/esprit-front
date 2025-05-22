@@ -57,7 +57,7 @@ export class ProjectComponent implements OnInit, OnDestroy {
     // @ Public properties
     // -----------------------------------------------------------------------------------------------------
     chartGithubIssues: ApexOptions = {};
-    chartTaskDistribution: ApexOptions = {};
+    chartCommitsByContributor: ApexOptions = {};
     chartBudgetDistribution: ApexOptions = {};
     chartWeeklyExpenses: ApexOptions = {};
     chartMonthlyExpenses: ApexOptions = {};
@@ -138,7 +138,12 @@ export class ProjectComponent implements OnInit, OnDestroy {
     }
 
     setSelectedProject(project: string): void {
+        //TODO: fix the pie chart problem
         this.selectedProject.set(project);
+        // --- IMPORTANT: Clear data BEFORE fetching new data ---
+        this.projectStats.set(undefined); // Clear project stats immediately
+        this.chartGithubIssues = null; // Clear first chart
+        this.chartCommitsByContributor = undefined; // Clear the problematic chart
         this._projectService.getStats(project).subscribe((stats) => {
             this.projectStats.set(stats);
             this._prepareChartData();
@@ -284,6 +289,85 @@ export class ProjectComponent implements OnInit, OnDestroy {
             yaxis: {
                 labels: {
                     offsetX: -16,
+                    style: {
+                        colors: 'var(--fuse-text-secondary)',
+                    },
+                },
+            },
+        };
+
+        // Your existing Commits by Contributor chart preparation
+        if (
+            !this.projectStats() ||
+            !this.projectStats().contributors ||
+            this.projectStats().contributors.length === 0
+        ) {
+            console.warn(
+                'Project stats data or contributors not available for chart preparation.'
+            );
+            this.chartCommitsByContributor = undefined; // Ensure it's cleared if no data
+            return;
+        }
+
+        const contributorNames = this.projectStats().contributors.map(
+            (c) => c.name
+        );
+        const commitCounts = this.projectStats().contributors.map(
+            (c) => c.commitCount
+        );
+
+        this.chartCommitsByContributor = {
+            chart: {
+                fontFamily: 'inherit',
+                foreColor: 'inherit',
+                height: '100%',
+                type: 'polarArea',
+                toolbar: {
+                    show: false,
+                },
+                zoom: {
+                    enabled: false,
+                },
+            },
+            labels: contributorNames,
+            legend: {
+                position: 'bottom',
+            },
+            plotOptions: {
+                polarArea: {
+                    spokes: {
+                        connectorColors: 'var(--fuse-border)',
+                    },
+                    rings: {
+                        strokeColor: 'var(--fuse-border)',
+                    },
+                },
+            },
+            series: commitCounts,
+            states: {
+                hover: {
+                    filter: {
+                        type: 'darken',
+                    },
+                },
+            },
+            stroke: {
+                width: 2,
+            },
+            theme: {
+                monochrome: {
+                    enabled: true,
+                    color: '#93C5FD',
+                    shadeIntensity: 0.75,
+                    shadeTo: 'dark',
+                },
+            },
+            tooltip: {
+                followCursor: true,
+                theme: 'dark',
+            },
+            yaxis: {
+                labels: {
                     style: {
                         colors: 'var(--fuse-text-secondary)',
                     },
