@@ -1,8 +1,8 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http'; // Import HttpHeaders
 import { inject, Injectable } from '@angular/core';
 import { KeycloakService } from '@core/auth/keycloak.service'; // Make sure this path is correct
+import { APP_API_URL } from 'app/app.config';
 import { catchError, map, Observable, of } from 'rxjs';
-import { APP_API_URL } from '../../../app.config';
 
 export interface GenerateCommitResponse {
     // Define expected object shape
