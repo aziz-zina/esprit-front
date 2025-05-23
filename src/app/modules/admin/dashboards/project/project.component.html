@@ -1,0 +1,580 @@
+<div class="flex min-w-0 flex-auto flex-col">
+    <!-- Header -->
+    <div class="bg-card">
+        <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 sm:px-8">
+            <div
+                class="my-8 flex min-w-0 flex-auto flex-col sm:my-12 sm:flex-row sm:items-center"
+            >
+                <!-- Avatar and name -->
+                <!-- TODO Change this to breadcrumbs -->
+                <div class="flex min-w-0 flex-auto items-center">
+                    <div class="h-16 w-16 flex-0 overflow-hidden rounded-full">
+                        <img
+                            class="h-full w-full object-cover"
+                            src="images/avatars/brian-hughes.jpg"
+                        />
+                    </div>
+                    <div class="ml-4 flex min-w-0 flex-col">
+                        <ng-container *transloco="let t">
+                            <div
+                                class="truncate text-2xl font-semibold leading-7 tracking-tight md:text-5xl md:leading-snug"
+                            >
+                                {{ t('welcome-back') }}, Brian!
+                            </div>
+                        </ng-container>
+                        <div class="flex items-center">
+                            <mat-icon
+                                class="icon-size-5"
+                                [svgIcon]="'heroicons_solid:bell'"
+                            ></mat-icon>
+                            <div
+                                class="text-secondary ml-1.5 truncate leading-6"
+                            >
+                                You have 2 new messages and 15 new tasks
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Actions -->
+                <div class="mt-6 flex items-center space-x-3 sm:ml-2 sm:mt-0">
+                    <button
+                        class="bg-accent"
+                        mat-flat-button
+                        [color]="'accent'"
+                    >
+                        <mat-icon
+                            class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:envelope'"
+                        ></mat-icon>
+                        <span class="ml-2">Messages</span>
+                    </button>
+                    <button mat-flat-button [color]="'primary'">
+                        <mat-icon
+                            class="icon-size-5"
+                            [svgIcon]="'heroicons_solid:cog-8-tooth'"
+                        ></mat-icon>
+                        <span class="ml-2">Settings</span>
+                    </button>
+                </div>
+            </div>
+            <!-- Project selector -->
+            <div
+                class="bg-default relative flex cursor-pointer self-start overflow-hidden rounded-t-xl border border-b-0 pb-1 pl-5 pr-4 pt-2"
+                matRipple
+                [matMenuTriggerFor]="projectsMenu"
+            >
+                <div class="flex items-center">
+                    <div class="overflow-hidden">
+                        <div class="truncate font-medium leading-6">
+                            {{ selectedProject() }}
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-center pl-2">
+                        <mat-icon
+                            class="icon-size-5"
+                            [svgIcon]="'heroicons_mini:chevron-down'"
+                        ></mat-icon>
+                    </div>
+                </div>
+                <mat-menu #projectsMenu="matMenu" [xPosition]="'before'">
+                    @for (repository of repositories(); track repository) {
+                        <button
+                            mat-menu-item
+                            (click)="setSelectedProject(repository)"
+                        >
+                            {{ repository }}
+                        </button>
+                    }
+                </mat-menu>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main -->
+    <div class="-mt-px flex-auto border-t pt-4 sm:pt-6">
+        <div class="mx-auto w-full max-w-screen-xl">
+            <!-- Tabs -->
+            <mat-tab-group
+                class="sm:px-2"
+                mat-stretch-tabs="false"
+                [animationDuration]="'0'"
+            >
+                <!-- Home -->
+                <mat-tab label="Home">
+                    <ng-template matTabContent>
+                        <div
+                            class="grid w-full min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-4"
+                        >
+                            <div
+                                class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow"
+                            >
+                                <div class="flex items-start justify-between">
+                                    <div
+                                        class="truncate text-lg font-medium leading-6 tracking-tight"
+                                    >
+                                        Branches
+                                    </div>
+                                </div>
+                                <div class="mt-2 flex flex-col items-center">
+                                    <div
+                                        class="text-7xl font-bold leading-none tracking-tight text-blue-500 sm:text-8xl"
+                                    >
+                                        {{ projectStats().totalBranches }}
+                                    </div>
+                                    <div
+                                        class="text-muted-foreground mt-3 text-md font-medium text-blue-600"
+                                    >
+                                        Total Branches in Repository
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div
+                                class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow"
+                            >
+                                <div class="flex items-start justify-between">
+                                    <div
+                                        class="truncate text-lg font-medium leading-6 tracking-tight"
+                                    >
+                                        Commits
+                                    </div>
+                                </div>
+                                <div class="mt-2 flex flex-col items-center">
+                                    <div
+                                        class="text-7xl font-bold leading-none tracking-tight text-red-500 sm:text-8xl"
+                                    >
+                                        {{ projectStats().totalCommits }}
+                                    </div>
+                                    <div
+                                        class="text-muted-foreground mt-3 text-md font-medium text-red-600"
+                                    >
+                                        Total Commits in Repository
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Issues -->
+                            <div
+                                class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow"
+                            >
+                                <div class="flex items-start justify-between">
+                                    <div
+                                        class="truncate text-lg font-medium leading-6 tracking-tight"
+                                    >
+                                        Issues
+                                    </div>
+                                    <div class="-mr-3 -mt-2 ml-2">
+                                        <button
+                                            mat-icon-button
+                                            [matMenuTriggerFor]="issuesMenu"
+                                        >
+                                            <mat-icon
+                                                class="icon-size-5"
+                                                [svgIcon]="
+                                                    'heroicons_mini:ellipsis-vertical'
+                                                "
+                                            ></mat-icon>
+                                        </button>
+                                        <mat-menu #issuesMenu="matMenu">
+                                            <button mat-menu-item>
+                                                Yesterday
+                                            </button>
+                                            <button mat-menu-item>
+                                                2 days ago
+                                            </button>
+                                            <button mat-menu-item>
+                                                3 days ago
+                                            </button>
+                                        </mat-menu>
+                                    </div>
+                                </div>
+                                <div class="mt-2 flex flex-col items-center">
+                                    <div
+                                        class="text-7xl font-bold leading-none tracking-tight text-amber-500 sm:text-8xl"
+                                    >
+                                        24
+                                    </div>
+                                    <div
+                                        class="text-lg font-medium text-amber-600 dark:text-amber-500"
+                                    >
+                                        Open
+                                    </div>
+                                    <div
+                                        class="text-secondary mt-5 flex w-full items-baseline justify-center"
+                                    >
+                                        <div
+                                            class="truncate text-md font-medium"
+                                        >
+                                            Closed today:
+                                        </div>
+                                        <div
+                                            class="ml-1.5 text-lg font-semibold"
+                                        >
+                                            19
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Features -->
+                            <div
+                                class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow"
+                            >
+                                <div class="flex items-start justify-between">
+                                    <div
+                                        class="truncate text-lg font-medium leading-6 tracking-tight"
+                                    >
+                                        Features
+                                    </div>
+                                    <div class="-mr-3 -mt-2 ml-2">
+                                        <button
+                                            mat-icon-button
+                                            [matMenuTriggerFor]="featuresMenu"
+                                        >
+                                            <mat-icon
+                                                class="icon-size-5"
+                                                [svgIcon]="
+                                                    'heroicons_mini:ellipsis-vertical'
+                                                "
+                                            ></mat-icon>
+                                        </button>
+                                        <mat-menu #featuresMenu="matMenu">
+                                            <button mat-menu-item>
+                                                Yesterday
+                                            </button>
+                                            <button mat-menu-item>
+                                                2 days ago
+                                            </button>
+                                            <button mat-menu-item>
+                                                3 days ago
+                                            </button>
+                                        </mat-menu>
+                                    </div>
+                                </div>
+                                <div class="mt-2 flex flex-col items-center">
+                                    <div
+                                        class="text-7xl font-bold leading-none tracking-tight text-green-500 sm:text-8xl"
+                                    >
+                                        38
+                                    </div>
+                                    <div
+                                        class="text-lg font-medium text-green-600 dark:text-green-500"
+                                    >
+                                        Proposals
+                                    </div>
+                                    <div
+                                        class="text-secondary mt-5 flex w-full items-baseline justify-center"
+                                    >
+                                        <div
+                                            class="truncate text-md font-medium"
+                                        >
+                                            Implemented:
+                                        </div>
+                                        <div
+                                            class="ml-1.5 text-lg font-semibold"
+                                        >
+                                            16
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Daily Commits summary -->
+                            <div
+                                class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow sm:col-span-2 md:col-span-4"
+                            >
+                                <div
+                                    class="flex flex-col items-start justify-between sm:flex-row"
+                                >
+                                    <div
+                                        class="truncate text-lg font-medium leading-6 tracking-tight"
+                                    >
+                                        Daily Commits Summary
+                                    </div>
+                                </div>
+                                <div
+                                    class="mt-8 grid w-full grid-flow-row grid-cols-1 gap-6 sm:mt-4 lg:grid-cols-1"
+                                >
+                                    <!-- New vs. Closed -->
+                                    <div class="flex flex-auto flex-col">
+                                        <div class="text-secondary font-medium">
+                                            New vs. Merged
+                                        </div>
+                                        @if (projectStats()) {
+                                            <div
+                                                class="flex flex-auto flex-col"
+                                            >
+                                                @if (chartGithubIssues) {
+                                                    <apx-chart
+                                                        class="h-80 w-full flex-auto"
+                                                        [chart]="
+                                                            chartGithubIssues.chart
+                                                        "
+                                                        [colors]="
+                                                            chartGithubIssues.colors
+                                                        "
+                                                        [dataLabels]="
+                                                            chartGithubIssues.dataLabels
+                                                        "
+                                                        [grid]="
+                                                            chartGithubIssues.grid
+                                                        "
+                                                        [labels]="
+                                                            chartGithubIssues.labels
+                                                        "
+                                                        [legend]="
+                                                            chartGithubIssues.legend
+                                                        "
+                                                        [plotOptions]="
+                                                            chartGithubIssues.plotOptions
+                                                        "
+                                                        [series]="
+                                                            chartGithubIssues.series
+                                                        "
+                                                        [states]="
+                                                            chartGithubIssues.states
+                                                        "
+                                                        [stroke]="
+                                                            chartGithubIssues.stroke
+                                                        "
+                                                        [tooltip]="
+                                                            chartGithubIssues.tooltip
+                                                        "
+                                                        [xaxis]="
+                                                            chartGithubIssues.xaxis
+                                                        "
+                                                        [yaxis]="
+                                                            chartGithubIssues.yaxis
+                                                        "
+                                                    ></apx-chart>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Task distribution -->
+                            <div
+                                class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow sm:col-span-2 md:col-span-4 lg:col-span-2"
+                            >
+                                <div
+                                    class="flex flex-col items-start justify-between sm:flex-row"
+                                >
+                                    <div
+                                        class="truncate text-lg font-medium leading-6 tracking-tight"
+                                    >
+                                        Commits by Contributor
+                                    </div>
+                                </div>
+                                @if (projectStats()) {
+                                    <div class="mt-6 flex flex-auto flex-col">
+                                        @if (chartCommitsByContributor) {
+                                            <apx-chart
+                                                *ngIf="
+                                                    chartCommitsByContributor
+                                                "
+                                                class="h-80 w-full flex-auto"
+                                                [chart]="
+                                                    chartCommitsByContributor?.chart
+                                                "
+                                                [labels]="
+                                                    chartCommitsByContributor?.labels
+                                                "
+                                                [legend]="
+                                                    chartCommitsByContributor?.legend
+                                                "
+                                                [plotOptions]="
+                                                    chartCommitsByContributor?.plotOptions
+                                                "
+                                                [series]="
+                                                    chartCommitsByContributor?.series
+                                                "
+                                                [states]="
+                                                    chartCommitsByContributor?.states
+                                                "
+                                                [stroke]="
+                                                    chartCommitsByContributor?.stroke
+                                                "
+                                                [theme]="
+                                                    chartCommitsByContributor?.theme
+                                                "
+                                                [tooltip]="
+                                                    chartCommitsByContributor?.tooltip
+                                                "
+                                                [yaxis]="
+                                                    chartCommitsByContributor?.yaxis
+                                                "
+                                            ></apx-chart>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Commit history -->
+                            <div
+                                class="bg-card flex flex-auto flex-col overflow-hidden rounded-2xl p-6 shadow sm:col-span-2 md:col-span-4 lg:col-span-2"
+                            >
+                                <div
+                                    class="flex flex-col items-start justify-between sm:flex-row"
+                                >
+                                    <div
+                                        class="truncate text-lg font-medium leading-6 tracking-tight"
+                                    >
+                                        Commit History
+                                    </div>
+                                </div>
+                                <div class="mt-2 flex flex-col divide-y">
+                                    @for (commit of commits(); track commit) {
+                                        <div
+                                            class="flex flex-row items-center justify-between px-0.5 py-4"
+                                        >
+                                            <div class="flex flex-col">
+                                                <div class="font-medium">
+                                                    {{ commit.shortMessage }}
+                                                </div>
+                                                <div
+                                                    class="-ml-0.5 mt-2 flex flex-col space-y-1 sm:mt-1 sm:flex-row sm:items-center sm:space-x-3 sm:space-y-0"
+                                                >
+                                                    @if (commit.commitDate) {
+                                                        <div
+                                                            class="flex items-center"
+                                                        >
+                                                            <mat-icon
+                                                                class="text-hint icon-size-5"
+                                                                [svgIcon]="
+                                                                    'heroicons_solid:clock'
+                                                                "
+                                                            ></mat-icon>
+                                                            <div
+                                                                class="text-secondary ml-1.5 text-md"
+                                                            >
+                                                                {{
+                                                                    commit.commitDate
+                                                                        | date
+                                                                            : 'MMM d, y h:mm a'
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    @if (commit.committerName) {
+                                                        <div
+                                                            class="flex items-center"
+                                                        >
+                                                            <mat-icon
+                                                                class="text-hint icon-size-5"
+                                                                [svgIcon]="
+                                                                    'heroicons_solid:user'
+                                                                "
+                                                            ></mat-icon>
+                                                            <div
+                                                                class="text-secondary ml-1.5 text-md"
+                                                            >
+                                                                {{
+                                                                    commit.committerName
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    @if (
+                                                        commit.committerEmail
+                                                    ) {
+                                                        <div
+                                                            class="flex items-center"
+                                                        >
+                                                            <mat-icon
+                                                                class="text-hint icon-size-5"
+                                                                [svgIcon]="
+                                                                    'heroicons_solid:at-symbol'
+                                                                "
+                                                            ></mat-icon>
+                                                            <div
+                                                                class="text-secondary ml-1.5 text-md"
+                                                            >
+                                                                {{
+                                                                    commit.committerEmail
+                                                                }}
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <button mat-icon-button>
+                                                <mat-icon
+                                                    [svgIcon]="
+                                                        'heroicons_mini:chevron-right'
+                                                    "
+                                                ></mat-icon>
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                </mat-tab>
+
+                <!-- Team -->
+                <mat-tab>
+                    <ng-template mat-tab-label>
+                        <span class="inline-flex items-center space-x-2">
+                            <span class="">Team</span>
+                            <span
+                                class="rounded-full bg-primary-100 px-2 py-1 text-sm text-on-primary-100"
+                                >{{ projectStats().contributors.length }}</span
+                            >
+                        </span>
+                    </ng-template>
+                    <ng-template matTabContent>
+                        <div
+                            class="grid w-full min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                        >
+                            @for (
+                                member of projectStats().contributors;
+                                track member.email
+                            ) {
+                                <div
+                                    class="bg-card flex flex-auto flex-col items-center overflow-hidden rounded-2xl shadow"
+                                >
+                                    <!-- Avatar & Info -->
+                                    <div
+                                        class="flex w-full flex-auto flex-col p-8 text-center"
+                                    >
+                                        <div
+                                            class="mx-auto h-32 w-32 overflow-hidden rounded-full"
+                                        >
+                                            <div
+                                                class="flex h-full w-full items-center justify-center rounded-full bg-gray-200 object-cover text-3xl uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-200"
+                                            >
+                                                {{ member.name.charAt(0) }}
+                                            </div>
+                                        </div>
+                                        <div class="mt-6 font-medium">
+                                            {{ member.name }}
+                                        </div>
+                                        <div class="text-secondary">
+                                            {{ member.email }}
+                                        </div>
+                                    </div>
+                                    <!-- Email & Phone -->
+                                    <div
+                                        class="flex w-full items-center divide-x border-t"
+                                    >
+                                        <a
+                                            class="flex flex-auto items-center justify-center py-4 hover:bg-hover"
+                                            [href]="'mailto:' + member.email"
+                                        >
+                                            <mat-icon
+                                                class="text-hint icon-size-5"
+                                                [svgIcon]="
+                                                    'heroicons_solid:envelope'
+                                                "
+                                            ></mat-icon>
+                                            <span class="ml-2">Email</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </ng-template>
+                </mat-tab>
+            </mat-tab-group>
+        </div>
+    </div>
+</div>

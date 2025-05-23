@@ -15,23 +15,19 @@ const isAccessAllowed = async (
 ): Promise<boolean | UrlTree> => {
     const { authenticated, grantedRoles } = authData;
 
-    const requiredRole = route.data['roles'] as string[];
+    const requiredRole = route.data['role'] as string;
     if (!requiredRole) {
         return false;
     }
 
-    const hasRequiredRole = (roles: string[]): boolean =>
-        roles.some((role) =>
-            Object.values(grantedRoles.realmRoles).some((realmRoles) =>
-                realmRoles.includes(role)
-            )
+    const hasRequiredRole = (role: string): boolean =>
+        Object.values(grantedRoles.realmRoles).some((realmRoles) =>
+            realmRoles.includes(role)
         );
 
     if (authenticated && hasRequiredRole(requiredRole)) {
         return true;
     }
-
-    console.log('im here');
 
     const router = inject(Router);
     return router.parseUrl('/example');

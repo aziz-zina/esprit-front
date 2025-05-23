@@ -3,7 +3,6 @@ import { AuthGuard } from '@core/auth/guards/auth.guard';
 import { NoAuthGuard } from '@core/auth/guards/noAuth.guard';
 import { initialDataResolver } from './app.resolvers';
 import { LayoutComponent } from './layout/layout.component';
-import { ExampleComponent } from './modules/admin/example/example.component'; // Import ExampleComponent
 
 // @formatter:off
 
@@ -36,31 +35,51 @@ export const appRoutes: Route[] = [
             initialData: initialDataResolver,
         },
         data: {
-            roles: ['admin', 'student'],
+            role: 'admin',
+            layout: 'classic',
         },
 
         children: [
             {
-                path: 'example',
+                path: 'dashboards',
                 data: {
-                    roles: ['admin', 'student'],
+                    role: 'admin',
                 },
-
-                loadChildren: () =>
-                    import('./modules/admin/example/example.routes'),
+                children: [
+                    {
+                        path: 'analytics',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/dashboards/analytics/analytics.routes'
+                            ),
+                    },
+                    {
+                        path: 'project',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/dashboards/project/project.routes'
+                            ),
+                    },
+                ],
             },
             {
                 path: 'users',
                 title: 'routes.users.teachers.title',
                 data: {
-                    roles: ['admin', 'student'],
+                    role: 'admin',
                 },
                 children: [
                     {
                         path: 'admins',
                         title: 'routes.users.admins.title',
                         data: {
-                            roles: ['admin', 'student'],
+                            role: 'admin',
                         },
                         loadChildren: () =>
                             import(
@@ -84,6 +103,79 @@ export const appRoutes: Route[] = [
                             ),
                     },
                 ],
+            },
+            {
+                path: 'academic',
+                title: 'routes.academic.title',
+                data: {
+                    role: 'admin',
+                },
+                children: [
+                    {
+                        path: 'academic-years',
+                        title: 'routes.users.academic-years.title',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/academic/academic-years/academic-years.routes'
+                            ),
+                    },
+                    {
+                        path: 'teachers',
+                        title: 'routes.users.teachers.title',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/academic/classrooms/classrooms.routes'
+                            ),
+                    },
+                    {
+                        path: 'subjects',
+                        title: 'routes.users.teachers.title',
+                        data: {
+                            role: 'admin',
+                        },
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/academic/subjects/subjects.routes'
+                            ),
+                    },
+                    {
+                        path: 'students',
+                        title: 'routes.users.students.title',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/users/students/students.routes'
+                            ),
+                    },
+                ],
+            },
+        ],
+    },
+    // User routes
+    {
+        path: '',
+        canActivate: [AuthGuard],
+        canActivateChild: [AuthGuard],
+        data: {
+            role: 'student',
+            layout: 'modern',
+        },
+        component: LayoutComponent,
+        resolve: {
+            initialData: initialDataResolver,
+        },
+        children: [
+            {
+                path: 'example',
+                data: {
+                    role: 'student',
+                },
+                loadChildren: () => import('./modules/example/example.routes'),
             },
         ],
     },

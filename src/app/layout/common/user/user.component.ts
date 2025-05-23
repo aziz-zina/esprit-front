@@ -43,6 +43,7 @@ export class UserComponent implements OnInit {
 
     showAvatar = input(true);
     readonly user = signal<User | null>(null);
+    readonly isAdmin = signal<boolean>(false);
 
     // -----------------------------------------------------------------------------------------------------
     // @ Lifecycle hooks
@@ -58,6 +59,8 @@ export class UserComponent implements OnInit {
             .subscribe((user: User) => {
                 this.user.set(user);
             });
+
+        this.isAdmin.set(this._keycloakService.hasRole('admin'));
     }
 
     // -----------------------------------------------------------------------------------------------------
