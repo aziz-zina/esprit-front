@@ -1,0 +1,154 @@
+<div class="rounded-lg border border-gray-300 bg-white p-4 shadow-sm">    <h2 class="mb-4 text-xl font-semibold text-gray-800 flex items-center">
+        <mat-icon class="mr-2">merge_type</mat-icon>
+        Create Pull Request
+    </h2><mat-tab-group [(selectedIndex)]="selectedTabIndex" class="mt-4">        <!-- Create Pull Request Tab -->
+        <mat-tab label="Create Pull Request">
+            <div class="p-4">
+                <!-- Branch Status and Refresh -->
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <mat-icon class="text-blue-600 mr-2">info</mat-icon>
+                            <span class="text-sm text-blue-800">
+                                Local: {{ localBranches.length }} | Remote: {{ remoteBranches.length }} | Current: {{ currentBranch || 'none' }}
+                            </span>
+                        </div>
+                        <button type="button" 
+                                mat-icon-button 
+                                (click)="loadBranchData()" 
+                                [disabled]="isProcessing"
+                                title="Refresh branch data">
+                            <mat-icon>refresh</mat-icon>
+                        </button>
+                    </div>
+                </div>
+
+                <form (ngSubmit)="createMergeRequest()" #mergeForm="ngForm">
+                    <!-- Source and Target Branches -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <mat-form-field appearance="outline">
+                            <mat-label>Source Branch (From)</mat-label>
+                            <mat-select [(value)]="sourceBranch" (selectionChange)="updateCanMerge()" required>
+                                <mat-optgroup label="Local Branches" *ngIf="localBranches.length > 0">
+                                    <mat-option *ngFor="let branch of localBranches" [value]="branch">
+                                        {{ branch }}
+                                        <span *ngIf="branch === currentBranch" class="text-green-600 ml-2">(current)</span>
+                                    </mat-option>
+                                </mat-optgroup>
+                                <mat-optgroup label="Remote Branches" *ngIf="remoteBranches.length > 0">
+                                    <mat-option *ngFor="let branch of remoteBranches" [value]="'origin/' + branch">
+                                        origin/{{ branch }}
+                                    </mat-option>
+                                </mat-optgroup>
+                                <mat-option disabled *ngIf="localBranches.length === 0 && remoteBranches.length === 0">
+                                    No branches available
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline">
+                            <mat-label>Target Branch (Into)</mat-label>
+                            <mat-select [(value)]="targetBranch" (selectionChange)="updateCanMerge()" required>
+                                <mat-optgroup label="Local Branches" *ngIf="localBranches.length > 0">
+                                    <mat-option *ngFor="let branch of localBranches" [value]="branch">
+                                        {{ branch }}
+                                        <span *ngIf="branch === currentBranch" class="text-green-600 ml-2">(current)</span>
+                                    </mat-option>
+                                </mat-optgroup>
+                                <mat-optgroup label="Remote Branches" *ngIf="remoteBranches.length > 0">
+                                    <mat-option *ngFor="let branch of remoteBranches" [value]="'origin/' + branch">
+                                        origin/{{ branch }}
+                                    </mat-option>
+                                </mat-optgroup>
+                                <mat-option disabled *ngIf="localBranches.length === 0 && remoteBranches.length === 0">
+                                    No branches available
+                                </mat-option>
+                            </mat-select>
+                        </mat-form-field>
+                    </div>
+
+                    <!-- Title -->
+                    <mat-form-field appearance="outline" class="w-full mb-4">
+                        <mat-label>Merge Request Title</mat-label>
+                        <input matInput [(ngModel)]="title" (input)="updateCanMerge()" 
+                               name="title" required placeholder="feat: Add new feature">
+                        <mat-error *ngIf="!title.trim()">Title is required</mat-error>
+                    </mat-form-field>
+
+                    <!-- Description -->
+                    <mat-form-field appearance="outline" class="w-full mb-4">
+                        <mat-label>Description (Optional)</mat-label>
+                        <textarea matInput [(ngModel)]="description" name="description" 
+                                rows="4" placeholder="Describe the changes you are merging..."></textarea>
+                    </mat-form-field>
+
+                    <!-- Preview -->
+                    <div class="mb-4 p-3 bg-gray-50 rounded-md border">
+                        <h4 class="font-medium text-gray-700 mb-2">Preview:</h4>
+                        <div class="text-sm text-gray-600">
+                            <div class="flex items-center mb-1">
+                                <mat-icon class="text-blue-600 mr-1" style="font-size: 16px;">call_split</mat-icon>
+                                <code class="bg-gray-200 px-1 rounded">{{ sourceBranch || '[source]' }}</code>
+                                <mat-icon class="mx-1" style="font-size: 16px;">arrow_forward</mat-icon>
+                                <code class="bg-gray-200 px-1 rounded">{{ targetBranch || '[target]' }}</code>
+                            </div>
+                            <div *ngIf="title" class="font-medium">{{ title }}</div>
+                            <div *ngIf="description" class="text-xs mt-1 text-gray-500">{{ description }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end space-x-2">
+                        <button type="button" 
+                                mat-stroked-button 
+                                (click)="resetMergeRequest()"
+                                [disabled]="isProcessing">
+                            Reset
+                        </button>
+                        <button type="submit" 
+                                mat-raised-button 
+                                color="primary"
+                                [disabled]="!canMerge"
+                                class="flex items-center">                            <mat-spinner *ngIf="isProcessing" diameter="20" class="mr-2"></mat-spinner>
+                            <mat-icon *ngIf="!isProcessing" class="mr-1">merge_type</mat-icon>
+                            {{ isProcessing ? 'Processing...' : 'Create Pull Request' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </mat-tab>
+
+        <!-- Results Tab -->
+        <mat-tab label="Result" [disabled]="!mergeResult">
+            <div class="p-4">
+                <div *ngIf="mergeResult === 'success'" class="text-center py-8">
+                    <mat-icon class="text-green-600 mb-4" style="font-size: 48px; height: 48px; width: 48px;">check_circle</mat-icon>
+                    <h3 class="text-lg font-semibold text-green-700 mb-2">Merge Successful!</h3>
+                    <p class="text-gray-600">{{ mergeMessage }}</p>
+                    <button mat-raised-button color="primary" class="mt-4" (click)="resetMergeRequest()">
+                        Create Another Merge Request
+                    </button>
+                </div>
+
+                <div *ngIf="mergeResult === 'error'" class="text-center py-8">
+                    <mat-icon class="text-red-600 mb-4" style="font-size: 48px; height: 48px; width: 48px;">error</mat-icon>
+                    <h3 class="text-lg font-semibold text-red-700 mb-2">Merge Failed</h3>
+                    <p class="text-gray-600 mb-4">{{ mergeMessage }}</p>
+                    <div class="space-x-2">
+                        <button mat-stroked-button (click)="resetMergeRequest()">Try Again</button>
+                        <button mat-raised-button color="primary" (click)="selectedTabIndex = 0">Back to Form</button>
+                    </div>                </div>
+
+                <div *ngIf="mergeResult === 'error'" class="text-center py-8">
+                    <mat-icon class="text-red-600 mb-4" style="font-size: 48px; height: 48px; width: 48px;">error</mat-icon>
+                    <h3 class="text-lg font-semibold text-red-700 mb-2">Error</h3>
+                    <p class="text-gray-600 whitespace-pre-line">{{ mergeMessage }}</p>
+                    <button mat-raised-button (click)="resetMergeRequest()" class="mt-4">
+                        <mat-icon class="mr-1">refresh</mat-icon>
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>

@@ -1,0 +1,263 @@
+.commit-diff-viewer {
+  .header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    padding: 16px;
+    
+    .commit-selectors {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .diff-stats {
+      display: flex;
+      gap: 16px;
+      
+      .stat {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 14px;
+        
+        &.added {
+          color: #28a745;
+        }
+        
+        &.modified {
+          color: #ffc107;
+        }
+        
+        &.deleted {
+          color: #dc3545;
+        }
+      }
+    }
+  }
+  
+  .file-list {
+    border-bottom: 1px solid #e9ecef;
+    
+    .file-item {
+      padding: 8px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f3f4;
+      transition: background-color 0.2s;
+      
+      &:hover {
+        background-color: #f8f9fa;
+      }
+      
+      &.selected {
+        background-color: #e3f2fd;
+        border-left: 3px solid #2196f3;
+      }
+      
+      .file-name {
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+      
+      .file-status {
+        font-size: 12px;
+        text-transform: uppercase;
+        font-weight: 600;
+        
+        &.added {
+          color: #28a745;
+        }
+        
+        &.modified {
+          color: #ffc107;
+        }
+        
+        &.deleted {
+          color: #dc3545;
+        }
+        
+        &.renamed {
+          color: #6f42c1;
+        }
+      }
+    }
+  }
+  
+  .diff-content {
+    flex: 1;
+    min-height: 400px;
+    
+    .no-file-selected {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #6c757d;
+      font-style: italic;
+    }
+    
+    .diff-viewer {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      line-height: 1.4;
+      
+      .diff-line {
+        padding: 2px 8px;
+        white-space: pre-wrap;
+        border-left: 3px solid transparent;
+        
+        &.added {
+          background-color: #d4edda;
+          border-left-color: #28a745;
+          
+          &:before {
+            content: '+';
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+          }
+        }
+        
+        &.removed {
+          background-color: #f8d7da;
+          border-left-color: #dc3545;
+          
+          &:before {
+            content: '-';
+            color: #dc3545;
+            font-weight: bold;
+            margin-right: 8px;
+          }
+        }
+        
+        &.context {
+          background-color: #f8f9fa;
+          
+          &:before {
+            content: ' ';
+            margin-right: 8px;
+          }
+        }
+        
+        &.hunk-header {
+          background-color: #e9ecef;
+          color: #6c757d;
+          font-weight: bold;
+          padding: 4px 8px;
+          border-left: none;
+          
+          &:before {
+            content: '@@';
+            margin-right: 8px;
+          }
+        }
+      }
+    }
+  }
+  
+  .loading-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    
+    mat-spinner {
+      margin-right: 16px;
+    }
+  }
+  
+  .error-state {
+    padding: 16px;
+    text-align: center;
+    color: #dc3545;
+    
+    .error-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .error-message {
+      margin-bottom: 16px;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .commit-diff-viewer {
+    .header {
+      .commit-selectors {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      
+      .diff-stats {
+        justify-content: center;
+      }
+    }
+    
+    .diff-content {
+      .diff-viewer {
+        font-size: 11px;
+        
+        .diff-line {
+          padding: 1px 4px;
+        }
+      }
+    }
+  }
+}
+
+// Dark theme support
+.dark {
+  .commit-diff-viewer {
+    .header {
+      background: #2d3748;
+      border-color: #4a5568;
+      color: #f7fafc;
+    }
+    
+    .file-list {
+      border-color: #4a5568;
+      
+      .file-item {
+        border-color: #4a5568;
+        
+        &:hover {
+          background-color: #2d3748;
+        }
+        
+        &.selected {
+          background-color: #2b6cb0;
+        }
+      }
+    }
+    
+    .diff-content {
+      .diff-viewer {
+        .diff-line {
+          &.added {
+            background-color: #22543d;
+            color: #9ae6b4;
+          }
+          
+          &.removed {
+            background-color: #742a2a;
+            color: #fed7d7;
+          }
+          
+          &.context {
+            background-color: #2d3748;
+            color: #e2e8f0;
+          }
+          
+          &.hunk-header {
+            background-color: #4a5568;
+            color: #a0aec0;
+          }
+        }
+      }
+    }
+  }
+}

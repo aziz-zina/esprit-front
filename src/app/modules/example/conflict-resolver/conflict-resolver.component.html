@@ -1,0 +1,180 @@
+<div class="conflict-resolver-dialog">
+    <h2 mat-dialog-title class="text-xl font-semibold text-gray-800 flex items-center">
+        <mat-icon class="mr-2 text-orange-600">code</mat-icon>
+        Resolve Conflicts in {{ fileName }}
+    </h2>
+
+    <div mat-dialog-content class="conflict-content">
+        <div class="mb-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <mat-icon class="text-orange-600 mr-2">info</mat-icon>
+                    <span class="font-medium text-orange-800">
+                        {{ conflictSections.length }} conflict(s) found
+                    </span>
+                </div>                <div class="text-sm">
+                    <span class="text-green-600 font-medium">
+                        {{ getResolvedCount() }}
+                    </span>
+                    <span class="text-gray-600"> / {{ conflictSections.length }} resolved</span>
+                </div>
+            </div>
+        </div>
+
+        <mat-tab-group class="conflict-tabs">
+            <!-- Conflicts Tab -->
+            <mat-tab label="Resolve Conflicts">
+                <div class="p-4 space-y-6">
+                    <div *ngFor="let section of conflictSections" 
+                         class="conflict-section border rounded-lg overflow-hidden"
+                         [class.resolved]="section.resolved">
+                        
+                        <!-- Section Header -->
+                        <div class="conflict-header p-3 border-b"
+                             [class.bg-green-50]="section.resolved"
+                             [class.bg-red-50]="!section.resolved">
+                            <div class="flex items-center justify-between">
+                                <h4 class="font-medium">
+                                    <mat-icon class="mr-1" 
+                                              [class.text-green-600]="section.resolved"
+                                              [class.text-red-600]="!section.resolved">
+                                        {{ section.resolved ? 'check_circle' : 'error' }}
+                                    </mat-icon>
+                                    Conflict #{{ section.id + 1 }}
+                                    <span class="text-sm text-gray-500 ml-2">
+                                        Lines {{ section.startLine + 1 }} - {{ section.endLine + 1 }}
+                                    </span>
+                                </h4>
+                                <button mat-icon-button 
+                                        (click)="resetSection(section.id)"
+                                        [disabled]="!section.resolved"
+                                        title="Reset this conflict">
+                                    <mat-icon>refresh</mat-icon>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Resolution Options -->
+                        <div class="conflict-body p-4">
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                                <!-- Current Version -->
+                                <div class="conflict-option">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="font-medium text-blue-700">Current Version (HEAD)</h5>
+                                        <button mat-raised-button 
+                                                color="primary"
+                                                size="small"
+                                                [class.mat-button-disabled]="section.selectedSide === 'current'"
+                                                (click)="selectSide(section.id, 'current')">
+                                            <mat-icon class="mr-1">check</mat-icon>
+                                            Accept Current
+                                        </button>
+                                    </div>
+                                    <div class="code-preview p-3 bg-blue-50 border border-blue-200 rounded font-mono text-sm whitespace-pre-wrap">{{ section.currentContent || '(empty)' }}</div>
+                                </div>
+
+                                <!-- Incoming Version -->
+                                <div class="conflict-option">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="font-medium text-green-700">Incoming Version</h5>
+                                        <button mat-raised-button 
+                                                color="accent"
+                                                size="small"
+                                                [class.mat-button-disabled]="section.selectedSide === 'incoming'"
+                                                (click)="selectSide(section.id, 'incoming')">
+                                            <mat-icon class="mr-1">check</mat-icon>
+                                            Accept Incoming
+                                        </button>
+                                    </div>
+                                    <div class="code-preview p-3 bg-green-50 border border-green-200 rounded font-mono text-sm whitespace-pre-wrap">{{ section.incomingContent || '(empty)' }}</div>
+                                </div>
+                            </div>
+
+                            <!-- Custom Resolution -->
+                            <div class="custom-resolution">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h5 class="font-medium text-purple-700">Custom Resolution</h5>
+                                    <button mat-stroked-button 
+                                            color="accent"
+                                            size="small"
+                                            [class.mat-button-disabled]="section.selectedSide === 'custom'"
+                                            (click)="selectSide(section.id, 'custom')">
+                                        <mat-icon class="mr-1">edit</mat-icon>
+                                        Edit Custom
+                                    </button>
+                                </div>
+                                
+                                <div *ngIf="section.selectedSide === 'custom'" class="custom-editor">
+                                    <textarea class="w-full p-3 border border-purple-200 rounded font-mono text-sm"
+                                              rows="6"
+                                              [(ngModel)]="section.customContent"
+                                              (ngModelChange)="updateCustomContent(section.id, $event)"
+                                              placeholder="Enter your custom resolution here..."></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Resolution Status -->
+                            <div *ngIf="section.resolved" class="resolution-status mt-3 p-2 bg-green-100 border border-green-300 rounded flex items-center">
+                                <mat-icon class="text-green-600 mr-2">check_circle</mat-icon>
+                                <span class="text-green-800 font-medium">
+                                    Resolved using 
+                                    <span class="capitalize">{{ section.selectedSide }}</span>
+                                    version
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Global Actions -->
+                    <div class="global-actions pt-4 border-t">
+                        <button mat-stroked-button (click)="resetAll()" class="mr-2">
+                            <mat-icon class="mr-1">refresh</mat-icon>
+                            Reset All
+                        </button>
+                        <span class="text-sm text-gray-600 ml-4">
+                            Resolve all conflicts to enable the "Accept Resolution" button
+                        </span>
+                    </div>
+                </div>
+            </mat-tab>
+
+            <!-- Preview Tab -->
+            <mat-tab label="Preview Resolved File">
+                <div class="p-4">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h4 class="font-medium text-gray-800">Final Result Preview</h4>
+                        <div class="text-sm">
+                            <span *ngIf="allResolved" class="text-green-600 font-medium">
+                                <mat-icon class="mr-1" style="font-size: 16px;">check_circle</mat-icon>
+                                All conflicts resolved
+                            </span>                            <span *ngIf="!allResolved" class="text-orange-600 font-medium">
+                                <mat-icon class="mr-1" style="font-size: 16px;">warning</mat-icon>
+                                {{ getUnresolvedCount() }} conflict(s) remaining
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="resolved-content-preview">
+                        <ngx-codemirror [(ngModel)]="resolvedContent"
+                                       [options]="cmOptions"
+                                       class="border border-gray-300 rounded">
+                        </ngx-codemirror>
+                    </div>
+                </div>
+            </mat-tab>
+        </mat-tab-group>
+    </div>
+
+    <div mat-dialog-actions align="end" class="pt-4 border-t">
+        <button mat-button (click)="cancelResolution()" class="mr-2">
+            Cancel
+        </button>
+        <button mat-raised-button 
+                color="primary"
+                [disabled]="!allResolved"
+                (click)="acceptResolution()">
+            <mat-icon class="mr-1">save</mat-icon>
+            Accept Resolution
+        </button>
+    </div>
+</div>

@@ -78,12 +78,38 @@
                         Git Controls
                         <span *ngIf="activeRepository" class="text-base font-normal text-indigo-600">- {{ activeRepository.name }}</span>
                         <span *ngIf="isBusy" class="ml-2 text-sm text-blue-600 animate-pulse"> (Working...)</span>
-                    </h2>
-                    <div *ngIf="!activeRepository" class="text-sm text-gray-500 mb-4">Select a managed repository to enable controls.</div>
+                    </h2>                    <div *ngIf="!activeRepository" class="text-sm text-gray-500 mb-4">Select a managed repository to enable controls.</div>
+
+                    <!-- Branch Selection for Clone -->
+                    <div *ngIf="activeRepository && !cloneDone" class="mb-4 border rounded p-3 bg-white">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Branch to Clone:</label>
+                        <div class="flex gap-2">
+                            <button type="button" (click)="fetchRemoteBranchesForClone()" 
+                                    [disabled]="isBusy || isLoadingRemoteBranches || !githubAccessToken" 
+                                    class="btn-secondary btn-sm disabled:opacity-50">
+                                <span *ngIf="!isLoadingRemoteBranches">Load Branches</span>
+                                <span *ngIf="isLoadingRemoteBranches">Loading...</span>
+                            </button>
+                            <select *ngIf="availableRemoteBranches.length > 0" 
+                                    [(ngModel)]="selectedCloneBranch" 
+                                    class="flex-1 rounded border border-gray-300 px-3 py-1 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                                <option *ngFor="let branch of availableRemoteBranches" [value]="branch">
+                                    {{ branch }}
+                                </option>
+                            </select>
+                        </div>
+                        <div *ngIf="cloneBranchError" class="mt-2 text-sm text-red-600">{{ cloneBranchError }}</div>
+                        <div *ngIf="selectedCloneBranch && availableRemoteBranches.length > 0" class="mt-2 text-xs text-gray-500">
+                            Will clone branch: <strong>{{ selectedCloneBranch }}</strong>
+                        </div>
+                    </div>
 
                     <!-- Action Buttons -->
                     <div class="mb-4 flex flex-wrap gap-2" *ngIf="activeRepository">
-                        <button type="button" (click)="cloneRepo()" [disabled]="isBusy || !activeRepository || !githubAccessToken" class="btn-primary disabled:opacity-50">
+                        <button type="button" (click)="cloneRepo()" 
+                                [disabled]="isBusy || !activeRepository || !githubAccessToken || (!cloneDone && availableRemoteBranches.length === 0)" 
+                                class="btn-primary disabled:opacity-50"
+                                [title]="!cloneDone && availableRemoteBranches.length === 0 ? 'Load branches first' : ''">
                             {{ cloneDone ? 'Re-Clone' : 'Clone' }}
                         </button>
                         <button type="button" (click)="pullChanges()" [disabled]="isBusy || !cloneDone || !githubAccessToken || !!selectedCommit" class="btn-secondary disabled:opacity-50" [title]="!!selectedCommit ? 'Switch to HEAD view to pull' : (!githubAccessToken ? 'GitHub Token required' : '')">
@@ -91,9 +117,10 @@
                         </button>
                         <button type="button" (click)="pushChanges()" [disabled]="isBusy || !cloneDone || !githubAccessToken || !!selectedCommit || selectedFile?.isDirty" class="btn-secondary disabled:opacity-50" [title]="!!selectedCommit ? 'Switch to HEAD view to push' : (selectedFile?.isDirty ? 'Save or discard changes before push' : (!githubAccessToken ? 'GitHub Token required' : 'Push local changes to remote'))">
                             Push
-                        </button>
-                        <button type="button" (click)="getStatus()" [disabled]="isBusy || !cloneDone || !!selectedCommit" class="btn-secondary disabled:opacity-50" [title]="!!selectedCommit ? 'Switch to HEAD view for status' : ''">
+                        </button>                        <button type="button" (click)="getStatus()" [disabled]="isBusy || !cloneDone || !!selectedCommit" class="btn-secondary disabled:opacity-50" [title]="!!selectedCommit ? 'Switch to HEAD view for status' : ''">
                             Status
+                        </button>                        <button type="button" (click)="openMergeRequest()" [disabled]="isBusy || !cloneDone || !!selectedCommit" class="btn-primary disabled:opacity-50" [title]="!!selectedCommit ? 'Switch to HEAD view for pull requests' : 'Create pull request'">
+                            Pull Request
                         </button>
                     </div>
 
@@ -110,21 +137,31 @@
                             <button type="button" (click)="loadBranchData()" [disabled]="isBusy || !cloneDone" class="ml-2 btn-secondary btn-xs disabled:opacity-50">
                                 Refresh Branches
                             </button>
-                        </div>
-
-                        <div class="mb-3 flex items-center gap-2">
+                        </div>                        <div class="mb-3 flex items-center gap-2">
                             <label for="branch-select" class="text-sm flex-shrink-0">Switch to:</label>
                             <select id="branch-select"
                                     class="flex-grow rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm disabled:opacity-50 disabled:bg-gray-100"
-                                    [disabled]="isBusy || !cloneDone || localBranches.length === 0 || !!selectedCommit"
+                                    [disabled]="isBusy || !cloneDone || (localBranches.length === 0 && remoteBranches.length === 0) || !!selectedCommit"
                                     (change)="switchBranch($any($event.target).value)"
                                     #branchSelector
                                     [title]="!!selectedCommit ? 'Switch to HEAD view to change branches' : ''">
-                                <option *ngIf="!currentBranch && localBranches.length > 0" value="" disabled selected>Select branch...</option>
-                                <option *ngFor="let branch of localBranches" [value]="branch" [selected]="branch === currentBranch">
-                                    {{ branch }}
-                                </option>
-                                <option *ngIf="localBranches.length === 0" disabled>No local branches</option>
+                                <option *ngIf="!currentBranch && (localBranches.length > 0 || remoteBranches.length > 0)" value="" disabled selected>Select branch...</option>
+                                
+                                <!-- Local Branches -->
+                                <optgroup *ngIf="localBranches.length > 0" label="Local Branches">
+                                    <option *ngFor="let branch of localBranches" [value]="branch" [selected]="branch === currentBranch">
+                                        {{ branch }} <span *ngIf="branch === currentBranch">(current)</span>
+                                    </option>
+                                </optgroup>
+                                
+                                <!-- Remote Branches -->
+                                <optgroup *ngIf="remoteBranches.length > 0" label="Remote Branches">
+                                    <option *ngFor="let branch of remoteBranches" [value]="'origin/' + branch">
+                                        origin/{{ branch }}
+                                    </option>
+                                </optgroup>
+                                
+                                <option *ngIf="localBranches.length === 0 && remoteBranches.length === 0" disabled>No branches available</option>
                             </select>
                         </div>
 
@@ -152,10 +189,12 @@
                          <h3 class="text-lg font-semibold text-gray-700">
                             Commit History
                             <span *ngIf="isLoadingHistory" class="ml-2 text-sm text-blue-600 animate-pulse">(Loading...)</span>
-                         </h3>
-                         <div>
+                         </h3>                         <div>
                             <button type="button" (click)="viewHead()" *ngIf="selectedCommit" [disabled]="isBusy" class="btn-secondary btn-xs mr-2 disabled:opacity-50">
                                 View Current (HEAD)
+                            </button>
+                            <button type="button" (click)="openCommitDiff()" [disabled]="isBusy || !cloneDone" class="btn-secondary btn-xs mr-2 disabled:opacity-50">
+                                Compare Commits
                             </button>
                             <button type="button" (click)="loadCommitHistory()" [disabled]="isBusy || !cloneDone" class="btn-secondary btn-xs disabled:opacity-50">
                                 Refresh History
@@ -211,8 +250,38 @@
                     <div *ngIf="activeRepository && cloneDone && repositoryTree.length > 0" class="max-h-96 overflow-y-auto text-sm">
                         <!-- Recursive template defined below -->
                         <ng-container *ngTemplateOutlet="treeNodeTemplate; context: { nodes: repositoryTree, level: 0 }"></ng-container>
+                    </div>                </div> <!-- End File Tree Section -->
+
+                <!-- Merge Request Section -->
+                <div *ngIf="activeRepository && cloneDone && showMergeRequest" class="rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-gray-700">Merge Request</h3>
+                        <button type="button" (click)="closeMergeRequest()" class="btn-secondary btn-xs">
+                            Close
+                        </button>
                     </div>
-                </div> <!-- End File Tree Section -->
+                    <app-merge-request 
+                        [repository]="activeRepository"
+                        [fs]="fs"
+                        [githubToken]="githubAccessToken"
+                        [corsProxy]="corsProxy"
+                        (statusUpdate)="addOutput($event)"
+                        (mergeCompleted)="onMergeCompleted($event)">
+                    </app-merge-request>
+                </div>                <!-- Commit Diff Viewer Section -->
+                <div *ngIf="activeRepository && cloneDone && showCommitDiff" class="rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <h3 class="text-lg font-semibold text-gray-700">Commit Diff Viewer</h3>
+                        <button type="button" (click)="closeCommitDiff()" class="btn-secondary btn-xs">
+                            Close
+                        </button>
+                    </div>
+                    <app-commit-diff-viewer 
+                        [fs]="fs"
+                        [dir]="dir"
+                        [commitHistory]="commitHistory">
+                    </app-commit-diff-viewer>
+                </div>
 
             </div> <!-- End Left Column -->
 
@@ -332,13 +401,53 @@
     /* Ensure Codemirror takes full height within its relative parent */
     .CodeMirror { height: 100% !important; font-family: monospace; font-size: 0.875rem; }
 
-    /* Tailwind Button Styles (extracted for clarity, can be kept inline) */
-    .btn-primary { @apply inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-300 disabled:cursor-not-allowed; }
-    .btn-secondary { @apply inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed; }
-    .btn-xs { @apply px-2.5 py-1 text-xs rounded; }
+    /* Button Styles */
+    .btn-primary { 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center; 
+        border-radius: 0.375rem; 
+        border: 1px solid transparent; 
+        background-color: #4f46e5; 
+        padding: 0.5rem 1rem; 
+        font-size: 0.875rem; 
+        font-weight: 500; 
+        color: white; 
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .btn-primary:hover { background-color: #4338ca; }
+    .btn-primary:disabled { background-color: #a5b4fc; cursor: not-allowed; }
+    
+    .btn-secondary { 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center; 
+        border-radius: 0.375rem; 
+        border: 1px solid #d1d5db; 
+        background-color: white; 
+        padding: 0.5rem 1rem; 
+        font-size: 0.875rem; 
+        font-weight: 500; 
+        color: #374151; 
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+    .btn-secondary:hover { background-color: #f9fafb; }
+    .btn-secondary:disabled { background-color: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
+    
+    .btn-xs { 
+        padding: 0.375rem 0.625rem; 
+        font-size: 0.75rem; 
+        border-radius: 0.375rem; 
+    }
 
     /* Loading Indicator */
-    .loading-indicator { @apply my-3 flex items-center text-sm text-blue-600; }
+    .loading-indicator { 
+        margin: 0.75rem 0; 
+        display: flex; 
+        align-items: center; 
+        font-size: 0.875rem; 
+        color: #2563eb; 
+    }
     .loading-indicator::before { content: ''; box-sizing: border-box; display: inline-block; width: 1em; height: 1em; margin-right: 0.5em; border: 2px solid currentColor; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 

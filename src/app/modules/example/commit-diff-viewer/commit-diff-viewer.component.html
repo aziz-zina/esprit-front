@@ -1,0 +1,200 @@
+<div class="commit-diff-viewer rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
+    <h2 class="mb-4 text-xl font-semibold text-gray-800 flex items-center">
+        <mat-icon class="mr-2">compare_arrows</mat-icon>
+        Compare Commits
+    </h2>
+
+    <!-- Commit Selection -->
+    <div class="commit-selection mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Commit 1 (Base) -->
+            <div class="commit-selector">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Base Commit</label>
+                <mat-select [(value)]="commit1" 
+                           (selectionChange)="compareCommits()"
+                           placeholder="Select base commit"
+                           class="w-full">
+                    <mat-option *ngFor="let commit of commitHistory" [value]="commit">
+                        <div class="commit-option">
+                            <div class="font-mono text-sm">{{ commit.oid.substring(0, 7) }}</div>
+                            <div class="text-xs text-gray-600 truncate">
+                                {{ formatCommitMessage(commit.commit.message) }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {{ formatDate(commit.commit.author.timestamp) }}
+                            </div>
+                        </div>
+                    </mat-option>
+                </mat-select>
+            </div>
+
+            <!-- Commit 2 (Compare) -->
+            <div class="commit-selector">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Compare Commit</label>
+                <mat-select [(value)]="commit2" 
+                           (selectionChange)="compareCommits()"
+                           placeholder="Select compare commit"
+                           class="w-full">
+                    <mat-option *ngFor="let commit of commitHistory" [value]="commit">
+                        <div class="commit-option">
+                            <div class="font-mono text-sm">{{ commit.oid.substring(0, 7) }}</div>
+                            <div class="text-xs text-gray-600 truncate">
+                                {{ formatCommitMessage(commit.commit.message) }}
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                {{ formatDate(commit.commit.author.timestamp) }}
+                            </div>
+                        </div>
+                    </mat-option>
+                </mat-select>
+            </div>
+        </div>
+
+        <!-- Compare Button -->
+        <div class="mt-4 flex justify-center">
+            <button mat-raised-button 
+                    color="primary"
+                    (click)="compareCommits()"
+                    [disabled]="!commit1 || !commit2 || commit1.oid === commit2.oid || isLoading"
+                    class="flex items-center">
+                <mat-spinner *ngIf="isLoading" diameter="20" class="mr-2"></mat-spinner>
+                <mat-icon *ngIf="!isLoading" class="mr-1">compare_arrows</mat-icon>
+                {{ isLoading ? 'Comparing...' : 'Compare Commits' }}
+            </button>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-message mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+        <div class="flex items-center">
+            <mat-icon class="text-red-600 mr-2">error</mat-icon>
+            <span class="text-red-800">{{ error }}</span>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div *ngIf="!isLoading && !error && diffEntries.length > 0" class="diff-results">
+        <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <mat-icon class="text-blue-600 mr-2">info</mat-icon>
+                    <span class="font-medium text-blue-800">
+                        {{ diffEntries.length }} file(s) changed
+                    </span>
+                </div>                <div class="text-sm text-blue-700">
+                    <span class="mr-4">
+                        <span class="font-medium text-green-600">{{ getAddedCount() }}</span> added
+                    </span>
+                    <span class="mr-4">
+                        <span class="font-medium text-blue-600">{{ getModifiedCount() }}</span> modified
+                    </span>
+                    <span>
+                        <span class="font-medium text-red-600">{{ getDeletedCount() }}</span> deleted
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="diff-content grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <!-- File List -->
+            <div class="file-list lg:col-span-1">
+                <h3 class="font-medium text-gray-800 mb-3">Changed Files</h3>
+                <div class="space-y-1 max-h-96 overflow-y-auto border rounded-md">
+                    <div *ngFor="let file of diffEntries"
+                         class="file-item p-3 cursor-pointer transition-colors hover:bg-gray-50"
+                         [class.bg-blue-100]="selectedFile === file"
+                         [class.border-blue-300]="selectedFile === file"
+                         (click)="selectFile(file)">
+                        <div class="flex items-center">
+                            <mat-icon class="mr-2 text-sm" [class]="getStatusColor(file.status)">
+                                {{ getStatusIcon(file.status) }}
+                            </mat-icon>
+                            <div class="flex-1 min-w-0">
+                                <div class="font-mono text-sm truncate">{{ file.file }}</div>
+                                <div class="text-xs" [class]="getStatusColor(file.status)">
+                                    {{ getStatusText(file.status) }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Diff Viewer -->
+            <div class="diff-viewer lg:col-span-2" *ngIf="selectedFile">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-medium text-gray-800 flex items-center">
+                        <mat-icon class="mr-2" [class]="getStatusColor(selectedFile.status)">
+                            {{ getStatusIcon(selectedFile.status) }}
+                        </mat-icon>
+                        {{ selectedFile.file }}
+                    </h3>
+                    <span class="text-sm px-2 py-1 rounded-full"
+                          [class.bg-green-100]="selectedFile.status === 'added'"
+                          [class.text-green-800]="selectedFile.status === 'added'"
+                          [class.bg-red-100]="selectedFile.status === 'deleted'"
+                          [class.text-red-800]="selectedFile.status === 'deleted'"
+                          [class.bg-blue-100]="selectedFile.status === 'modified'"
+                          [class.text-blue-800]="selectedFile.status === 'modified'">
+                        {{ getStatusText(selectedFile.status) }}
+                    </span>
+                </div>
+
+                <div class="diff-content border rounded-md overflow-hidden">
+                    <!-- File Added -->
+                    <div *ngIf="selectedFile.status === 'added'" class="added-content">
+                        <div class="diff-header bg-green-100 px-3 py-2 text-sm font-medium text-green-800">
+                            File added
+                        </div>
+                        <div class="diff-body p-3 bg-green-50 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">{{ selectedFile.newContent || '(empty file)' }}</div>
+                    </div>
+
+                    <!-- File Deleted -->
+                    <div *ngIf="selectedFile.status === 'deleted'" class="deleted-content">
+                        <div class="diff-header bg-red-100 px-3 py-2 text-sm font-medium text-red-800">
+                            File deleted
+                        </div>
+                        <div class="diff-body p-3 bg-red-50 font-mono text-sm whitespace-pre-wrap max-h-96 overflow-y-auto">{{ selectedFile.oldContent || '(empty file)' }}</div>
+                    </div>
+
+                    <!-- File Modified -->
+                    <div *ngIf="selectedFile.status === 'modified'" class="modified-content">
+                        <div class="diff-header bg-blue-100 px-3 py-2 text-sm font-medium text-blue-800">
+                            File modified
+                        </div>
+                        <div class="diff-body font-mono text-sm max-h-96 overflow-y-auto">
+                            <div *ngFor="let line of selectedFile.diff?.split('\n') || []" 
+                                 class="diff-line"
+                                 [class.diff-header-line]="isDiffHeaderLine(line)"
+                                 [class.diff-add]="parseDiffLine(line).type === 'add'"
+                                 [class.diff-remove]="parseDiffLine(line).type === 'remove'"
+                                 [class.diff-context]="parseDiffLine(line).type === 'context'">
+                                <span class="diff-line-content whitespace-pre">{{ parseDiffLine(line).content }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Changes -->
+    <div *ngIf="!isLoading && !error && commit1 && commit2 && diffEntries.length === 0" 
+         class="no-changes text-center py-8">
+        <mat-icon class="text-gray-400 mb-4" style="font-size: 48px; height: 48px; width: 48px;">
+            check_circle_outline
+        </mat-icon>
+        <h3 class="text-lg font-semibold text-gray-600 mb-2">No Changes</h3>
+        <p class="text-gray-500">The selected commits are identical.</p>
+    </div>
+
+    <!-- Initial State -->
+    <div *ngIf="!isLoading && !error && (!commit1 || !commit2)" 
+         class="initial-state text-center py-8">
+        <mat-icon class="text-gray-400 mb-4" style="font-size: 48px; height: 48px; width: 48px;">
+            compare_arrows
+        </mat-icon>
+        <h3 class="text-lg font-semibold text-gray-600 mb-2">Select Commits to Compare</h3>
+        <p class="text-gray-500">Choose two commits to see the differences between them.</p>
+    </div>
+</div>

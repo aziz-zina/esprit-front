@@ -39,6 +39,9 @@ import {
     CommitDialogComponent,
     CommitDialogData,
 } from './commit-dialog/commit-dialog.component';
+import { MergeRequestComponent } from './merge-request/merge-request.component';
+import { ConflictResolverComponent } from './conflict-resolver/conflict-resolver.component';
+import { CommitDiffViewerComponent } from './commit-diff-viewer/commit-diff-viewer.component';
 import {
     ExampleService,
     GenerateCommitResponse,
@@ -96,7 +99,14 @@ type GitStatusCode = (typeof GIT_STATUS)[keyof typeof GIT_STATUS];
 @Component({
     selector: 'example',
     standalone: true,
-    imports: [FormsModule, CommonModule, CodemirrorModule, DatePipe],
+    imports: [
+        FormsModule, 
+        CommonModule, 
+        CodemirrorModule, 
+        DatePipe,
+        MergeRequestComponent,
+        CommitDiffViewerComponent
+    ],
     templateUrl: './example.component.html',
     providers: [DatePipe],
 })
@@ -139,9 +149,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
     selectedCommit: GitLogEntry | null = null;
     isLoadingHistory: boolean = false;
     historyError: string | null = null;
-    readonly historyDepth = 50;
-
-    // --- Branch Management State ---
+    readonly historyDepth = 50;    // --- Branch Management State ---
     localBranches: string[] = [];
     remoteBranches: string[] = [];
     currentBranch: string | null = null;
@@ -149,6 +157,16 @@ export class ExampleComponent implements OnInit, OnDestroy {
     isSwitchingBranch: boolean = false;
     isCreatingBranch: boolean = false;
     branchError: string | null = null;
+
+    // --- Clone Branch Selection State ---
+    availableRemoteBranches: string[] = [];
+    selectedCloneBranch: string = '';
+    isLoadingRemoteBranches: boolean = false;
+    cloneBranchError: string | null = null;
+
+    // --- Merge Request & Diff Viewer State ---
+    showMergeRequest: boolean = false;
+    showCommitDiff: boolean = false;
 
     constructor() {
         this._injectBufferPolyfill();
@@ -615,17 +633,16 @@ export class ExampleComponent implements OnInit, OnDestroy {
 
             // No need for: await this.fs.promises.mkdir(parentDir, { recursive: true });
             // No need for: await this.fs.promises.mkdir(cloneDir);
-            // *** CORRECTION END ***
-
-            this.addOutput('Starting git clone operation...');
-            await git.clone({
+            // *** CORRECTION END ***            this.addOutput('Starting git clone operation...');
+            
+            // Determine clone parameters based on branch selection
+            const cloneOptions: any = {
                 fs: this.fs,
                 http: http,
                 dir: cloneDir,
                 url: cloneUrl,
                 corsProxy: this.corsProxy,
                 onAuth: () => auth,
-                singleBranch: true,
                 depth: this.historyDepth,
                 // Ensure onMessage runs inside NgZone to update the output log safely
                 onMessage: (m) => {
@@ -633,7 +650,19 @@ export class ExampleComponent implements OnInit, OnDestroy {
                         this.addOutput(`Remote: ${m.trim()}`)
                     );
                 },
-            });
+            };
+
+            // Add branch-specific clone options
+            if (this.selectedCloneBranch && this.selectedCloneBranch.trim()) {
+                cloneOptions.ref = this.selectedCloneBranch.trim();
+                cloneOptions.singleBranch = true;
+                this.addOutput(`Cloning specific branch: ${this.selectedCloneBranch}`);
+            } else {
+                cloneOptions.singleBranch = false; // Clone all branches
+                this.addOutput('Cloning all branches...');
+            }
+
+            await git.clone(cloneOptions);
 
             this.addOutput('Clone successful!', 'log');
             // Update cloneDone state within zone
@@ -1760,9 +1789,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
             this.datePipe.transform(timestamp * 1000, 'medium') ||
             'Invalid Date'
         );
-    }
-
-    // --- Branch Management Logic ---
+    }    // --- Branch Management Logic ---
     async loadBranchData(): Promise<void> {
         if (
             !this.activeRepository ||
@@ -1779,9 +1806,31 @@ export class ExampleComponent implements OnInit, OnDestroy {
         });
 
         try {
-            const [localBranchesList, remoteBranchesList, currentBranchName] =
+            // First try to fetch from remote to get latest branch info
+            if (this.githubAccessToken) {
+                try {
+                    this.addOutput('Fetching latest branch information from remote...');
+                    const auth = { username: 'oauth2', password: this.githubAccessToken };
+                    await git.fetch({
+                        fs: this.fs,
+                        http: http,
+                        dir: this.dir,
+                        onAuth: () => auth,
+                        corsProxy: this.corsProxy,
+                        singleBranch: false, // Fetch all branches
+                        tags: false,
+                    });
+                    this.addOutput('Fetched latest branch information from remote');
+                } catch (fetchError: any) {
+                    console.warn('Could not fetch from remote:', fetchError);
+                    this.addOutput(`Warning: Could not fetch from remote: ${fetchError.message || fetchError}`, 'warn');
+                }
+            }            const [localBranchesList, remoteBranchesList, currentBranchName] =
                 await Promise.all([
-                    git.listBranches({ fs: this.fs, dir: this.dir }),
+                    git.listBranches({ fs: this.fs, dir: this.dir }).catch(() => {
+                        this.addOutput('Could not list local branches.', 'warn');
+                        return [];
+                    }),
                     git
                         .listBranches({
                             fs: this.fs,
@@ -1880,28 +1929,20 @@ export class ExampleComponent implements OnInit, OnDestroy {
             });
         }
 
-        // Check for uncommitted changes (optional but recommended)
+        // Auto-discard uncommitted changes before switching
         try {
-            const matrix = await git.statusMatrix({
-                fs: this.fs,
-                dir: this.dir,
-            });
-            // Check if any file is modified, added, or deleted in workdir or stage compared to HEAD
+            const matrix = await git.statusMatrix({ fs: this.fs, dir: this.dir });
             const hasUncommitted = matrix.some(
-                (row) =>
-                    row[workdirStatusIdx] !== GIT_STATUS.ABSENT ||
-                    row[stageStatusIdx] !== GIT_STATUS.ABSENT
+                (row) => row[workdirStatusIdx] !== GIT_STATUS.ABSENT || row[stageStatusIdx] !== GIT_STATUS.ABSENT
             );
             if (hasUncommitted) {
-                this.addOutput(
-                    'Cannot switch: Uncommitted changes exist. Commit or stash first.',
-                    'error'
-                );
-                return;
+                this.addOutput('Discarding uncommitted changes before branch switch.', 'warn');
+                // Reset working directory to HEAD
+                await git.checkout({ fs: this.fs, dir: this.dir, ref: 'HEAD', force: true });
             }
         } catch (statusError: any) {
             this.addOutput(
-                `Warn: Could not check status before switch: ${statusError.message}`,
+                `Warning: Could not auto-discard changes before switch: ${statusError.message}`,
                 'warn'
             );
         }
@@ -1915,14 +1956,60 @@ export class ExampleComponent implements OnInit, OnDestroy {
         this.setLoading(true, `Switch Branch (${branchName})`); // Handles zone
 
         try {
-            await git.checkout({ fs: this.fs, dir: this.dir, ref: branchName });
-            this.addOutput(`Switched to branch '${branchName}'.`);
-            // Reset state within zone after successful checkout
+            // Clear commit history immediately so user doesn't see previous branch history
             this._ngZone.run(() => {
+                this.commitHistory = [];
                 this.selectedCommit = null;
                 this.selectedFile = null;
                 this.cmOptions = { ...this.cmOptions, readOnly: false };
-            });
+            });            // Handle remote branches by creating local tracking branches
+            if (branchName.startsWith('origin/')) {
+                const localBranchName = branchName.substring('origin/'.length);
+                this.addOutput(`Creating local tracking branch '${localBranchName}' for '${branchName}'...`);
+                
+                try {
+                    // Check if local branch already exists
+                    const existingBranches = await git.listBranches({ fs: this.fs, dir: this.dir });
+                    
+                    if (!existingBranches.includes(localBranchName)) {
+                        // Create the local branch pointing to the remote branch
+                        await git.branch({
+                            fs: this.fs,
+                            dir: this.dir,
+                            ref: localBranchName,
+                            object: branchName
+                        });
+                        this.addOutput(`Created local branch '${localBranchName}' tracking '${branchName}'.`);
+                    } else {
+                        this.addOutput(`Local branch '${localBranchName}' already exists.`);
+                    }
+                    
+                    // Checkout the local branch
+                    await git.checkout({ fs: this.fs, dir: this.dir, ref: localBranchName, force: true });
+                    this.addOutput(`Switched to local branch '${localBranchName}'.`);
+                    
+                    // Set up tracking relationship
+                    try {
+                        await git.addRemote({
+                            fs: this.fs,
+                            dir: this.dir,
+                            remote: 'origin',
+                            url: this.activeRepository.url,
+                        });
+                    } catch (remoteError) {
+                        // Remote might already exist, that's fine
+                    }
+                    
+                } catch (branchError: any) {
+                    this.addOutput(`Failed to handle remote branch: ${branchError.message}`, 'error');
+                    throw branchError;
+                }
+            } else {
+                // Regular local branch checkout
+                await git.checkout({ fs: this.fs, dir: this.dir, ref: branchName, force: true });
+                this.addOutput(`Switched to branch '${branchName}'.`);
+            }
+
             // Reload data - these handle their own zones
             await this.loadBranchData();
             await this.loadCommitHistory();
@@ -2041,6 +2128,62 @@ export class ExampleComponent implements OnInit, OnDestroy {
             });
             this.setLoading(false, `Create Branch (${branchToCreate})`); // Handles zone
             // No explicit detectChanges needed
+        }
+    }
+
+    // --- Remote Branch Fetching for Clone ---
+    async fetchRemoteBranchesForClone(): Promise<void> {
+        if (!this.activeRepository || !this.githubAccessToken || this.isLoadingRemoteBranches) {
+            return;
+        }
+
+        this._ngZone.run(() => {
+            this.isLoadingRemoteBranches = true;
+            this.cloneBranchError = null;
+            this.availableRemoteBranches = [];
+            this.selectedCloneBranch = '';
+        });
+
+        try {
+            this.addOutput(`Fetching remote branches for ${this.activeRepository.fullName}...`);
+            
+            // Use GitHub API to get branches
+            const response = await fetch(
+                `https://api.github.com/repos/${this.activeRepository.fullName}/branches`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.githubAccessToken}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+            }
+
+            const branches = await response.json();
+            const branchNames = branches.map((branch: any) => branch.name).sort();
+            
+            this._ngZone.run(() => {
+                this.availableRemoteBranches = branchNames;
+                // Default to 'main' or 'master' if available, otherwise first branch
+                const defaultBranch = branchNames.find((name: string) => 
+                    name === 'main' || name === 'master'
+                ) || branchNames[0] || '';
+                this.selectedCloneBranch = defaultBranch;
+            });
+
+            this.addOutput(`Found ${branchNames.length} remote branches.`);
+        } catch (error: any) {
+            this.addOutput(`Failed to fetch remote branches: ${error.message}`, 'error');
+            this._ngZone.run(() => {
+                this.cloneBranchError = error.message;
+            });
+        } finally {
+            this._ngZone.run(() => {
+                this.isLoadingRemoteBranches = false;
+            });
         }
     }
 
@@ -2197,9 +2340,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
                 // this._cdRef.detectChanges();
             });
         }
-    }
-
-    // --- Getter for Template ---
+    }    // --- Getter for Template ---
     get isBusy(): boolean {
         // Combine all relevant loading flags
         return (
@@ -2211,5 +2352,42 @@ export class ExampleComponent implements OnInit, OnDestroy {
             this.isCreatingBranch ||
             this.isFetchingRepos
         );
+    }
+
+    // --- Merge Request Methods ---
+    openMergeRequest(): void {
+        this.showMergeRequest = true;
+    }
+
+    closeMergeRequest(): void {
+        this.showMergeRequest = false;
+    }    onMergeCompleted(event: any): void {
+        // Handle merge completion
+        console.log('Merge completed:', event);
+        
+        // Refresh the repository state after merge
+        if (this.activeRepository) {
+            this.loadCommitHistory();
+            this.buildAndDisplayFileTree();
+            this.loadBranchData(); // Reload branch data to reflect changes
+        }
+        
+        // Show success message
+        this.addOutput('Merge completed successfully!', 'log');
+        
+        // Don't auto-close the merge request - let user see the result
+        // Only close if explicitly requested or if there was an error
+        if (event && !event.success) {
+            this.closeMergeRequest();
+        }
+    }
+
+    // --- Commit Diff Viewer Methods ---
+    openCommitDiff(): void {
+        this.showCommitDiff = true;
+    }
+
+    closeCommitDiff(): void {
+        this.showCommitDiff = false;
     }
 } // End of component class

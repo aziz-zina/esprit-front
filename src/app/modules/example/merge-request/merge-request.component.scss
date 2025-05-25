@@ -1,0 +1,54 @@
+.conflict-marker {
+    @apply border-l-4 border-red-500 bg-red-50 px-3 py-1;
+}
+
+.resolved-conflict {
+    @apply border-l-4 border-green-500 bg-green-50 px-3 py-1;
+}
+
+.merge-preview {
+    @apply bg-gray-50 border border-gray-200 rounded-md p-3;
+}
+
+.branch-indicator {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.branch-indicator.source {
+    @apply bg-blue-100 text-blue-800;
+}
+
+.branch-indicator.target {
+    @apply bg-green-100 text-green-800;
+}
+
+.conflict-file {
+    @apply transition-all duration-200 hover:shadow-md;
+}
+
+.merge-success {
+    @apply text-center py-8;
+}
+
+.merge-error {
+    @apply text-center py-8;
+}
+
+.tab-content {
+    min-height: 300px;
+}
+
+mat-tab-group {
+    .mat-mdc-tab-header {
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .mat-mdc-tab-body-wrapper {
+        padding-top: 0;
+    }
+}
+
+.spinner-inline {
+    display: inline-block;
+    vertical-align: middle;
+}
