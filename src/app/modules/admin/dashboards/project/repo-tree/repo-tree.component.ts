@@ -221,11 +221,9 @@ export class RepoTreeComponent implements OnInit, OnChanges {
     }
 
     navigateToPath(index: number): void {
-        // Navigates to a specific path segment.
-        // If index is -1, it means going back to the root.
         this.currentPath = this.currentPath.slice(0, index + 1);
-        this.searchQuery = ''; // Clear search when navigating breadcrumbs
-        this.clearFileContentDisplay(); // Clear file view on breadcrumb navigation
+        this.searchQuery = '';
+        this.clearFileContentDisplay();
         this.applyFilters();
     }
 
