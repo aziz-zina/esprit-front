@@ -1,0 +1,226 @@
+<div class="min-h-screen bg-gray-50 p-4">
+    <!-- Header Card -->
+    <mat-card class="mb-4 rounded-lg shadow-lg">
+        <mat-card-header>
+            <mat-card-title class="text-3xl font-bold text-gray-800">
+                <mat-icon
+                    inline="true"
+                    class="align-middle mr-2 !h-8 !w-8 !text-3xl"
+                    >source</mat-icon
+                >
+                {{ repoName }}
+            </mat-card-title>
+        </mat-card-header>
+        <mat-card-content
+            class="mt-4 flex flex-col items-start gap-4 md:flex-row md:items-center"
+        >
+            <!-- Branch Selector -->
+            <mat-form-field
+                appearance="outline"
+                class="w-full flex-grow md:w-auto"
+            >
+                <mat-label>Branch</mat-label>
+                <mat-select
+                    [(ngModel)]="selectedBranch"
+                    (selectionChange)="onBranchChange()"
+                >
+                    <mat-option
+                        *ngFor="let branch of branches"
+                        [value]="branch.name"
+                    >
+                        {{ branch.name }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Search Input -->
+            <mat-form-field
+                appearance="outline"
+                class="w-full flex-grow md:w-auto"
+            >
+                <mat-label>Search</mat-label>
+                <input
+                    matInput
+                    placeholder="Filter files..."
+                    [(ngModel)]="searchQuery"
+                    (input)="onSearchInputChange($event)"
+                />
+                <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+        </mat-card-content>
+    </mat-card>
+
+    <!-- NEW: File Content Display Card -->
+    <mat-card
+        *ngIf="fileContentToDisplay"
+        class="mb-4 max-h-[70vh] overflow-hidden rounded-lg shadow-lg"
+    >
+        <mat-card-header class="flex items-center justify-between p-4 pb-0">
+            <mat-card-title class="text-xl font-bold text-gray-800">
+                <mat-icon
+                    inline="true"
+                    class="align-middle mr-2 !h-6 !w-6 !text-xl"
+                    >description</mat-icon
+                >
+                Viewing: {{ fileNameToDisplay }}
+            </mat-card-title>
+            <button
+                mat-icon-button
+                (click)="clearFileContentDisplay()"
+                matTooltip="Close File Viewer"
+                class="text-gray-600 hover:bg-gray-100"
+            >
+                <mat-icon>close</mat-icon>
+            </button>
+        </mat-card-header>
+        <mat-card-content class="mt-4 rounded-lg bg-gray-100 p-4 pt-0">
+            <div
+                *ngIf="isContentBinaryOrUnreadable"
+                class="mb-4 rounded-md border border-yellow-400 bg-yellow-100 p-3 text-yellow-700"
+            >
+                <mat-icon inline="true" class="align-middle mr-2 !h-5 !w-5"
+                    >warning</mat-icon
+                >
+                <span
+                    >This file appears to be binary or contains unreadable
+                    characters. Displaying raw content.</span
+                >
+            </div>
+            <!-- Using <pre> for preserving whitespace and line breaks -->
+            <pre
+                class="max-h-[calc(70vh-150px)] overflow-auto whitespace-pre-wrap break-words rounded-md border border-gray-300 bg-white p-2 font-mono text-sm text-gray-800"
+                >{{ fileContentToDisplay }}</pre
+            >
+        </mat-card-content>
+    </mat-card>
+
+    <!-- Loading State -->
+    <div
+        *ngIf="isLoading"
+        class="flex h-64 flex-col items-center justify-center rounded-lg bg-white shadow-md"
+    >
+        <mat-spinner color="primary"></mat-spinner>
+        <p class="mt-4 text-gray-600">Loading repository contents...</p>
+    </div>
+
+    <!-- Error Message -->
+    <div
+        *ngIf="errorMessage"
+        class="rounded-md border border-red-400 bg-red-100 p-4 text-red-700 shadow-sm"
+    >
+        <mat-icon inline="true" class="align-middle mr-2 text-red-600"
+            >error</mat-icon
+        >
+        {{ errorMessage }}
+    </div>
+
+    <!-- Main Content Area -->
+    <div
+        *ngIf="!isLoading && !errorMessage"
+        class="rounded-lg bg-white p-6 shadow-md"
+    >
+        <!-- Breadcrumbs -->
+        <div
+            class="mb-4 flex items-center gap-1 border-b pb-2 text-sm text-blue-600"
+        >
+            <button
+                mat-icon-button
+                (click)="goBack()"
+                [disabled]="currentPath.length === 0"
+                matTooltip="Go back"
+                class="text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+                <mat-icon>arrow_back</mat-icon>
+            </button>
+            <span
+                class="cursor-pointer text-gray-700 hover:underline"
+                (click)="navigateToPath(-1)"
+            >
+                <mat-icon inline="true" class="align-text-bottom !h-4 !w-4"
+                    >home</mat-icon
+                >
+                Root
+            </span>
+            <ng-container *ngFor="let segment of currentPath; let i = index">
+                <mat-icon class="!h-4 !w-4 text-gray-500"
+                    >chevron_right</mat-icon
+                >
+                <span
+                    class="cursor-pointer text-gray-700 hover:underline"
+                    (click)="navigateToPath(i)"
+                    >{{ segment }}</span
+                >
+            </ng-container>
+        </div>
+
+        <!-- Repository Contents List -->
+        <div
+            class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+            <div
+                *ngIf="displayedContents.length === 0"
+                class="col-span-full rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center text-gray-500"
+            >
+                <mat-icon class="mb-2 !h-12 !w-12 text-gray-400"
+                    >folder_open</mat-icon
+                >
+                <p>
+                    No contents found in this directory or matching your search.
+                </p>
+            </div>
+
+            <div
+                *ngFor="let content of displayedContents"
+                class="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-md"
+            >
+                <div
+                    class="flex flex-grow cursor-pointer items-center gap-3"
+                    (click)="
+                        content.type === ContentType.DIRECTORY
+                            ? enterDirectory(content.name)
+                            : displayFileContent(content)
+                    "
+                >
+                    <mat-icon
+                        [color]="
+                            content.type === ContentType.DIRECTORY
+                                ? 'primary'
+                                : ''
+                        "
+                    >
+                        {{
+                            content.type === ContentType.DIRECTORY
+                                ? 'folder'
+                                : 'description'
+                        }}
+                    </mat-icon>
+                    <span
+                        class="overflow-hidden truncate text-ellipsis font-medium text-gray-800"
+                    >
+                        {{ content.name }}
+                    </span>
+                </div>
+                <div class="flex flex-shrink-0 items-center gap-2">
+                    <button
+                        mat-icon-button
+                        *ngIf="content.type === ContentType.FILE"
+                        (click)="displayFileContent(content)"
+                        matTooltip="View Content"
+                        class="text-gray-600 hover:bg-gray-100"
+                    >
+                        <mat-icon>visibility</mat-icon>
+                    </button>
+                    <button
+                        mat-icon-button
+                        *ngIf="content.type === ContentType.FILE"
+                        (click)="downloadFile(content)"
+                        matTooltip="Download File"
+                        class="text-gray-600 hover:bg-gray-100"
+                    >
+                        <mat-icon>download</mat-icon>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

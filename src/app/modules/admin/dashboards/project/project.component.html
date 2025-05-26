@@ -495,13 +495,6 @@
                                                     }
                                                 </div>
                                             </div>
-                                            <button mat-icon-button>
-                                                <mat-icon
-                                                    [svgIcon]="
-                                                        'heroicons_mini:chevron-right'
-                                                    "
-                                                ></mat-icon>
-                                            </button>
                                         </div>
                                     }
                                 </div>
@@ -572,6 +565,15 @@
                                 </div>
                             }
                         </div>
+                    </ng-template>
+                </mat-tab>
+
+                <!-- Code -->
+                <mat-tab label="Code">
+                    <ng-template matTabContent>
+                        <app-repo-tree
+                            [repoName]="selectedProject()"
+                        ></app-repo-tree>
                     </ng-template>
                 </mat-tab>
             </mat-tab-group>
