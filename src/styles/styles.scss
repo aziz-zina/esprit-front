@@ -2,3 +2,13 @@
 /*  @ Import/write your custom styles here.
 /*  @ Styles from this file will override 'vendors.scss' and Fuse's base styles.
 /* ----------------------------------------------------------------------------------------------------- */
+@import 'highlight.js/styles/github.css';
+
+.hljs {
+    font-size: 0.875rem; /* Equivalent to Tailwind's text-sm */
+    line-height: 1.5;
+    /* You might want to override default highlight.js padding if it conflicts with your layout */
+    padding: 1em; /* Default highlight.js padding, adjust if needed */
+    // background-color: #f6f8fa; /* Example background from github.css, ensures it's visible */
+    border-radius: 0.25rem; /* Matches Tailwind's rounded-md */
+}

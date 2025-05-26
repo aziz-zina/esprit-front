@@ -1,4 +1,5 @@
-import { CommonModule } from '@angular/common'; // Needed for *ngIf, *ngFor
+// src/app/repo-tree/repo-tree.component.ts
+import { CommonModule } from '@angular/common';
 import {
     Component,
     inject,
@@ -7,15 +8,16 @@ import {
     OnInit,
     SimpleChanges,
 } from '@angular/core';
-import { FormsModule } from '@angular/forms'; // Needed for [(ngModel)] on mat-select and input
+import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field'; // For mat-form-field
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner'; // For loading spinner
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTooltipModule } from '@angular/material/tooltip'; // For tooltips on buttons
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HighlightDirective } from '@shared/highlight.directive';
 import { ProjectService } from '../project.service';
 import { Branch, ContentType, RepositoryContent } from '../project.types';
 
@@ -31,6 +33,7 @@ import { Branch, ContentType, RepositoryContent } from '../project.types';
         MatFormFieldModule,
         MatProgressSpinnerModule,
         MatTooltipModule,
+        HighlightDirective,
     ],
     templateUrl: './repo-tree.component.html',
 })
@@ -54,6 +57,7 @@ export class RepoTreeComponent implements OnInit, OnChanges {
     fileContentToDisplay: string | null = null;
     fileNameToDisplay: string | null = null;
     isContentBinaryOrUnreadable: boolean = false;
+    currentFileExtension: string | null = null;
 
     ContentType = ContentType;
 
@@ -64,8 +68,8 @@ export class RepoTreeComponent implements OnInit, OnChanges {
             this._loadData(this.repoName);
         } else {
             this.errorMessage = 'Repository name not provided as input.';
-            this.isLoading = false;
         }
+        this.isLoading = false;
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -148,15 +152,16 @@ export class RepoTreeComponent implements OnInit, OnChanges {
 
     onBranchChange(): void {
         if (this.repoName && this.selectedBranch) {
-            this._router.navigate(['/repo', this.repoName]);
-            this.clearFileContentDisplay();
-            this.loadRepoContents();
+            // Update URL if desired (branch name not part of param)
+            this._router.navigate(['/repo', this.repoName]); // No branchName in URL param
+            this.clearFileContentDisplay(); // Clear file view on branch change
+            this.loadRepoContents(); // Reload contents for the new branch
         }
     }
 
     // New method to apply all current filters (path and search)
     applyFilters(): void {
-        this.clearFileContentDisplay();
+        this.clearFileContentDisplay(); // Clear file view on filter change to prevent stale content
 
         let contentsToFilter = this.repoContents;
 
@@ -221,9 +226,11 @@ export class RepoTreeComponent implements OnInit, OnChanges {
     }
 
     navigateToPath(index: number): void {
+        // Navigates to a specific path segment.
+        // If index is -1, it means going back to the root.
         this.currentPath = this.currentPath.slice(0, index + 1);
-        this.searchQuery = '';
-        this.clearFileContentDisplay();
+        this.searchQuery = ''; // Clear search when navigating breadcrumbs
+        this.clearFileContentDisplay(); // Clear file view on breadcrumb navigation
         this.applyFilters();
     }
 
@@ -263,6 +270,7 @@ export class RepoTreeComponent implements OnInit, OnChanges {
         this.fileContentToDisplay = null;
         this.fileNameToDisplay = null;
         this.isContentBinaryOrUnreadable = false;
+        this.currentFileExtension = null; // <--- Clear the file extension too
     }
 
     // Helper to display file content in the component's HTML
@@ -270,7 +278,11 @@ export class RepoTreeComponent implements OnInit, OnChanges {
         if (content.type === ContentType.FILE && content.content) {
             this.fileNameToDisplay = content.name;
             this.isContentBinaryOrUnreadable = false; // Reset flag for new file
+            // Extract file extension for highlight.js directive
+            this.currentFileExtension =
+                content.name.split('.').pop()?.toLowerCase() || null; // <--- Set file extension
 
+            console.log(`Displaying extension: ${this.currentFileExtension}`);
             try {
                 // Attempt to decode base64 if it's likely encoded
                 const decodedContent = atob(content.content);
