@@ -152,8 +152,6 @@ export class RepoTreeComponent implements OnInit, OnChanges {
 
     onBranchChange(): void {
         if (this.repoName && this.selectedBranch) {
-            // Update URL if desired (branch name not part of param)
-            this._router.navigate(['/repo', this.repoName]); // No branchName in URL param
             this.clearFileContentDisplay(); // Clear file view on branch change
             this.loadRepoContents(); // Reload contents for the new branch
         }
