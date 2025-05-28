@@ -21,6 +21,7 @@ import { ProjectService } from 'app/modules/admin/dashboards/project/project.ser
 import { ApexOptions, NgApexchartsModule } from 'ng-apexcharts';
 import { Subject, switchMap, tap } from 'rxjs';
 import { Commit, ProjectStats } from './project.types';
+import { RepoTreeComponent } from './repo-tree/repo-tree.component';
 
 @Component({
     selector: 'project',
@@ -38,6 +39,7 @@ import { Commit, ProjectStats } from './project.types';
         MatButtonToggleModule,
         NgApexchartsModule,
         MatTableModule,
+        RepoTreeComponent
     ],
 })
 export class ProjectComponent implements OnInit, OnDestroy {
@@ -170,10 +172,6 @@ export class ProjectComponent implements OnInit, OnDestroy {
     private _fixSvgFill(element: Element): void {
         // Current URL
         const currentURL = this._router.url;
-
-        // 1. Find all elements with 'fill' attribute within the element
-        // 2. Filter out the ones that doesn't have cross reference so we only left with the ones that use the 'url(#id)' syntax
-        // 3. Insert the 'currentURL' at the front of the 'fill' attribute value
         Array.from(element.querySelectorAll('*[fill]'))
             .filter((el) => el.getAttribute('fill').indexOf('url(') !== -1)
             .forEach((el) => {

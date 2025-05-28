@@ -40,3 +40,15 @@ export interface ProjectStats {
     dailyNewCommits: { [date: string]: number };
     dailyMergedCommits: { [date: string]: number };
 }
+
+export enum ContentType {
+    FILE = 'FILE',
+    DIRECTORY = 'DIRECTORY',
+}
+
+export interface RepositoryContent {
+    name: string;
+    path: string;
+    type: ContentType;
+    content?: string;
+}
