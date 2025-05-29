@@ -36,6 +36,7 @@ import type {
     ReadObjectResult,
 } from 'isomorphic-git';
 import http from 'isomorphic-git/http/web';
+import { ProjectService } from '../admin/dashboards/project/project.service';
 import {
     CommitDialogComponent,
     CommitDialogData,
@@ -47,6 +48,7 @@ import {
     GithubApiRepo,
 } from './example.service';
 import { MergeRequestComponent } from './merge-request/merge-request.component';
+import { PickGroupComponent } from './pick-group/pick-group.component';
 
 // --- Interfaces ---
 interface TreeNode {
@@ -113,6 +115,7 @@ type GitStatusCode = (typeof GIT_STATUS)[keyof typeof GIT_STATUS];
 })
 export class ExampleComponent implements OnInit, OnDestroy {
     private readonly exampleService = inject(ExampleService);
+    private readonly _repoService = inject(ProjectService);
     private readonly matDialog = inject(MatDialog);
     // *** CORRECTION: _cdRef might not be needed if we remove explicit calls, but keep for now if other uses exist ***
     private _cdRef = inject(ChangeDetectorRef);
@@ -353,6 +356,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
             // --- Success Handling ---
             if (result.ok) {
                 this.addOutput(`Successfully pushed changes to local server!`);
+                this.openPickGroupDialog(repoName);
                 // Additional success logic, e.g., refreshing status, updating UI
                 // Assuming result.updates might contain information about pushed refs
                 // The PushResult type does not have an 'updates' property.
@@ -2622,5 +2626,16 @@ export class ExampleComponent implements OnInit, OnDestroy {
 
     closeCommitDiff(): void {
         this.showCommitDiff = false;
+    }
+
+    openPickGroupDialog(repoName: string): void {
+        const dialogRef = this.matDialog.open(PickGroupComponent, {
+            data: repoName,
+        });
+        // dialogRef.afterClosed().subscribe((result) => {
+        //     if (result === 'success') {
+        //         this.fetchPage();
+        //     }
+        // });
     }
 } // End of component class

@@ -41,7 +41,12 @@ export class ProjectService {
         );
     }
 
-    
+    createRepo(repoName: string, groupId: string): Observable<string> {
+        return this._httpClient.post<string>(
+            `${this.API_URL}/repos/${repoName}/${groupId}`,
+            {}
+        );
+    }
 
     getRepositories(): Observable<string[]> {
         return this._httpClient.get<string[]>(`${this.API_URL}/repos`);
