@@ -119,9 +119,9 @@ export const futuristicNavigation: FuseNavigationItem[] = [
 export const horizontalNavigation: FuseNavigationItem[] = [
     {
         id: 'example',
-        title: 'Example',
+        title: 'Git Interface',
         type: 'basic',
-        icon: 'heroicons_outline:chart-pie',
+        icon: 'feather:github',
         link: '/example',
     },
 ];

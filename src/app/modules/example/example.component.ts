@@ -29,6 +29,7 @@ import FS from '@isomorphic-git/lightning-fs';
 import * as git from 'isomorphic-git';
 // Import specific types for better clarity and type checking
 import { MatDialog } from '@angular/material/dialog';
+import { HighlightDirective } from '@shared/highlight.directive';
 import type {
     CommitObject,
     PushResult,
@@ -39,14 +40,13 @@ import {
     CommitDialogComponent,
     CommitDialogData,
 } from './commit-dialog/commit-dialog.component';
-import { MergeRequestComponent } from './merge-request/merge-request.component';
-import { ConflictResolverComponent } from './conflict-resolver/conflict-resolver.component';
 import { CommitDiffViewerComponent } from './commit-diff-viewer/commit-diff-viewer.component';
 import {
     ExampleService,
     GenerateCommitResponse,
     GithubApiRepo,
 } from './example.service';
+import { MergeRequestComponent } from './merge-request/merge-request.component';
 
 // --- Interfaces ---
 interface TreeNode {
@@ -100,12 +100,13 @@ type GitStatusCode = (typeof GIT_STATUS)[keyof typeof GIT_STATUS];
     selector: 'example',
     standalone: true,
     imports: [
-        FormsModule, 
-        CommonModule, 
-        CodemirrorModule, 
+        FormsModule,
+        CommonModule,
+        CodemirrorModule,
         DatePipe,
         MergeRequestComponent,
-        CommitDiffViewerComponent
+        CommitDiffViewerComponent,
+        HighlightDirective,
     ],
     templateUrl: './example.component.html',
     providers: [DatePipe],
@@ -130,6 +131,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
     fs!: FS;
     dir: string = '';
     corsProxy = 'https://cors.isomorphic-git.org';
+    localGitServerBaseUrl: string = 'http://localhost:8082';
     output: string[] = [];
     isLoading = false;
     isProcessingTree = false;
@@ -149,7 +151,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
     selectedCommit: GitLogEntry | null = null;
     isLoadingHistory: boolean = false;
     historyError: string | null = null;
-    readonly historyDepth = 50;    // --- Branch Management State ---
+    readonly historyDepth = 50; // --- Branch Management State ---
     localBranches: string[] = [];
     remoteBranches: string[] = [];
     currentBranch: string | null = null;
@@ -244,6 +246,158 @@ export class ExampleComponent implements OnInit, OnDestroy {
         }
     }
 
+    async pushChangesToLocal(): Promise<void> {
+        // --- Pre-conditions (mostly remain the same) ---
+        if (
+            !this.activeRepository ||
+            !this.cloneDone ||
+            this.isLoading ||
+            !this.fs
+        ) {
+            this.addOutput(
+                'Push pre-conditions not met. Ensure a repository is active, cloned, and no operations are ongoing.',
+                'warn'
+            );
+            return;
+        }
+        if (this.selectedCommit) {
+            this.addOutput(
+                'Cannot push while viewing history. Please switch back to the current branch.',
+                'warn'
+            );
+            return;
+        }
+        if (this.selectedFile?.isDirty) {
+            this.addOutput(
+                'Cannot push: Unsaved changes exist. Please save or discard changes.',
+                'warn'
+            );
+            return;
+        }
+
+        // --- Construct the Push URL for your local JGit server ---
+        const repoName = this.activeRepository.name;
+        if (!repoName) {
+            this.addOutput(
+                'Repository name is missing. Cannot construct push URL.',
+                'error'
+            );
+            return;
+        }
+
+        const localPushUrl = `${this.localGitServerBaseUrl}/git/${repoName}.git`;
+        this.addOutput(`Targeting local Git server at: ${localPushUrl}`);
+
+        // --- Determine the correct corsProxy to use ---
+        // Initialize with null to explicitly indicate no proxy by default.
+        let effectiveCorsProxy: string | null = null;
+
+        // Check if the URL is a local one (localhost or 127.0.0.1)
+        const isLocalUrl =
+            localPushUrl.includes('localhost') ||
+            localPushUrl.includes('127.0.0.1');
+
+        if (isLocalUrl) {
+            // For local URLs, we want a direct connection.
+            // `null` explicitly tells isomorphic-git NOT to use any proxy,
+            // allowing the browser to attempt the direct cross-origin request.
+            this.addOutput(
+                `Directly connecting to local Git server (no public CORS proxy).`
+            );
+            effectiveCorsProxy = null; // Explicitly set to null
+        } else {
+            // For non-local URLs (e.g., external GitHub remotes), use the configured public proxy.
+            // Assuming 'this.corsProxy' holds a value like 'https://cors.isomorphic-git.org'
+            effectiveCorsProxy = this.corsProxy;
+            this.addOutput(`Using public CORS proxy: ${effectiveCorsProxy}`);
+        }
+
+        this.setLoading(
+            true,
+            `Pushing to local server (${this.activeRepository.name})`
+        );
+        this.addOutput('Attempting to push changes to local JGit server...');
+
+        try {
+            const currentBranchName = await git.currentBranch({
+                fs: this.fs,
+                dir: this.dir,
+            });
+            if (!currentBranchName)
+                throw new Error('Cannot push from detached HEAD state.');
+
+            this.addOutput(
+                `Pushing local branch '${currentBranchName}' to remote 'origin' (${localPushUrl})...`
+            );
+
+            // No authentication for basic JGit server setup, or configure as needed
+            const auth = {};
+
+            const pushOptions = {
+                fs: this.fs,
+                http: http, // Ensure 'http' is imported from 'isomorphic-git/http/web'
+                dir: this.dir,
+                url: localPushUrl,
+                ref: currentBranchName,
+                remote: 'origin',
+                onAuth: () => auth,
+                corsProxy: effectiveCorsProxy, // Use the determined value (null or proxy URL)
+                onMessage: (m) =>
+                    this._ngZone.run(() =>
+                        this.addOutput(`Remote: ${m.trim()}`)
+                    ),
+            };
+
+            const result: git.PushResult = await git.push(pushOptions);
+
+            // --- Success Handling ---
+            if (result.ok) {
+                this.addOutput(`Successfully pushed changes to local server!`);
+                // Additional success logic, e.g., refreshing status, updating UI
+                // Assuming result.updates might contain information about pushed refs
+                // The PushResult type does not have an 'updates' property.
+                // Log the raw result for debugging or handle as needed.
+                this.addOutput(`Push result: ${JSON.stringify(result)}`);
+                // Trigger a refresh of the repository status after push
+            } else {
+                // Handle cases where push.ok is false but no error was thrown
+                // (e.g., non-fast-forward push that isomorphic-git might not throw for by default)
+                let errorMessage = 'Push operation completed with issues.';
+                if (result.error) {
+                    errorMessage += ` Error: ${result.error || result.error}`;
+                }
+                this.addOutput(errorMessage, 'error');
+                console.error('Push result error:', result);
+            }
+        } catch (error: any) {
+            // --- Error Handling ---
+            this.addOutput(
+                `Push operation to local server failed: ${error.message || error}`,
+                'error'
+            );
+            console.error('Push error to local server:', error);
+            // Provide more user-friendly messages for common errors
+            if (error.message.includes('403')) {
+                this.addOutput(
+                    'Possible CORS issue or server authorization problem. Check your server logs and CORS configuration.',
+                    'error'
+                );
+            } else if (error.message.includes('401')) {
+                this.addOutput(
+                    'Authentication required or failed for the Git server.',
+                    'error'
+                );
+            } else if (error.message.includes('NetworkError')) {
+                this.addOutput(
+                    'Network connection issue or server is unreachable. Ensure the local Git server is running.',
+                    'error'
+                );
+            }
+        } finally {
+            this.setLoading(false, `Push (${this.activeRepository?.name})`);
+        }
+    }
+
     // --- Authentication ---
     fetchGithubAccessToken(): void {
         // Avoid fetching if already loading *or* if token already exists (unless forced)
@@ -306,6 +460,14 @@ export class ExampleComponent implements OnInit, OnDestroy {
                     });
                 },
             });
+    }
+
+    getFileExtension(filename: string): string | null {
+        if (!filename) {
+            return null;
+        }
+        const lastDotIndex = filename.lastIndexOf('.');
+        return lastDotIndex > -1 ? filename.substring(lastDotIndex + 1) : null;
     }
 
     // --- GitHub Repo Fetching ---
@@ -634,7 +796,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
             // No need for: await this.fs.promises.mkdir(parentDir, { recursive: true });
             // No need for: await this.fs.promises.mkdir(cloneDir);
             // *** CORRECTION END ***            this.addOutput('Starting git clone operation...');
-            
+
             // Determine clone parameters based on branch selection
             const cloneOptions: any = {
                 fs: this.fs,
@@ -656,7 +818,9 @@ export class ExampleComponent implements OnInit, OnDestroy {
             if (this.selectedCloneBranch && this.selectedCloneBranch.trim()) {
                 cloneOptions.ref = this.selectedCloneBranch.trim();
                 cloneOptions.singleBranch = true;
-                this.addOutput(`Cloning specific branch: ${this.selectedCloneBranch}`);
+                this.addOutput(
+                    `Cloning specific branch: ${this.selectedCloneBranch}`
+                );
             } else {
                 cloneOptions.singleBranch = false; // Clone all branches
                 this.addOutput('Cloning all branches...');
@@ -1789,7 +1953,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
             this.datePipe.transform(timestamp * 1000, 'medium') ||
             'Invalid Date'
         );
-    }    // --- Branch Management Logic ---
+    } // --- Branch Management Logic ---
     async loadBranchData(): Promise<void> {
         if (
             !this.activeRepository ||
@@ -1809,8 +1973,13 @@ export class ExampleComponent implements OnInit, OnDestroy {
             // First try to fetch from remote to get latest branch info
             if (this.githubAccessToken) {
                 try {
-                    this.addOutput('Fetching latest branch information from remote...');
-                    const auth = { username: 'oauth2', password: this.githubAccessToken };
+                    this.addOutput(
+                        'Fetching latest branch information from remote...'
+                    );
+                    const auth = {
+                        username: 'oauth2',
+                        password: this.githubAccessToken,
+                    };
                     await git.fetch({
                         fs: this.fs,
                         http: http,
@@ -1820,17 +1989,28 @@ export class ExampleComponent implements OnInit, OnDestroy {
                         singleBranch: false, // Fetch all branches
                         tags: false,
                     });
-                    this.addOutput('Fetched latest branch information from remote');
+                    this.addOutput(
+                        'Fetched latest branch information from remote'
+                    );
                 } catch (fetchError: any) {
                     console.warn('Could not fetch from remote:', fetchError);
-                    this.addOutput(`Warning: Could not fetch from remote: ${fetchError.message || fetchError}`, 'warn');
+                    this.addOutput(
+                        `Warning: Could not fetch from remote: ${fetchError.message || fetchError}`,
+                        'warn'
+                    );
                 }
-            }            const [localBranchesList, remoteBranchesList, currentBranchName] =
+            }
+            const [localBranchesList, remoteBranchesList, currentBranchName] =
                 await Promise.all([
-                    git.listBranches({ fs: this.fs, dir: this.dir }).catch(() => {
-                        this.addOutput('Could not list local branches.', 'warn');
-                        return [];
-                    }),
+                    git
+                        .listBranches({ fs: this.fs, dir: this.dir })
+                        .catch(() => {
+                            this.addOutput(
+                                'Could not list local branches.',
+                                'warn'
+                            );
+                            return [];
+                        }),
                     git
                         .listBranches({
                             fs: this.fs,
@@ -1931,14 +2111,27 @@ export class ExampleComponent implements OnInit, OnDestroy {
 
         // Auto-discard uncommitted changes before switching
         try {
-            const matrix = await git.statusMatrix({ fs: this.fs, dir: this.dir });
+            const matrix = await git.statusMatrix({
+                fs: this.fs,
+                dir: this.dir,
+            });
             const hasUncommitted = matrix.some(
-                (row) => row[workdirStatusIdx] !== GIT_STATUS.ABSENT || row[stageStatusIdx] !== GIT_STATUS.ABSENT
+                (row) =>
+                    row[workdirStatusIdx] !== GIT_STATUS.ABSENT ||
+                    row[stageStatusIdx] !== GIT_STATUS.ABSENT
             );
             if (hasUncommitted) {
-                this.addOutput('Discarding uncommitted changes before branch switch.', 'warn');
+                this.addOutput(
+                    'Discarding uncommitted changes before branch switch.',
+                    'warn'
+                );
                 // Reset working directory to HEAD
-                await git.checkout({ fs: this.fs, dir: this.dir, ref: 'HEAD', force: true });
+                await git.checkout({
+                    fs: this.fs,
+                    dir: this.dir,
+                    ref: 'HEAD',
+                    force: true,
+                });
             }
         } catch (statusError: any) {
             this.addOutput(
@@ -1962,32 +2155,48 @@ export class ExampleComponent implements OnInit, OnDestroy {
                 this.selectedCommit = null;
                 this.selectedFile = null;
                 this.cmOptions = { ...this.cmOptions, readOnly: false };
-            });            // Handle remote branches by creating local tracking branches
+            }); // Handle remote branches by creating local tracking branches
             if (branchName.startsWith('origin/')) {
                 const localBranchName = branchName.substring('origin/'.length);
-                this.addOutput(`Creating local tracking branch '${localBranchName}' for '${branchName}'...`);
-                
+                this.addOutput(
+                    `Creating local tracking branch '${localBranchName}' for '${branchName}'...`
+                );
+
                 try {
                     // Check if local branch already exists
-                    const existingBranches = await git.listBranches({ fs: this.fs, dir: this.dir });
-                    
+                    const existingBranches = await git.listBranches({
+                        fs: this.fs,
+                        dir: this.dir,
+                    });
+
                     if (!existingBranches.includes(localBranchName)) {
                         // Create the local branch pointing to the remote branch
                         await git.branch({
                             fs: this.fs,
                             dir: this.dir,
                             ref: localBranchName,
-                            object: branchName
+                            object: branchName,
                         });
-                        this.addOutput(`Created local branch '${localBranchName}' tracking '${branchName}'.`);
+                        this.addOutput(
+                            `Created local branch '${localBranchName}' tracking '${branchName}'.`
+                        );
                     } else {
-                        this.addOutput(`Local branch '${localBranchName}' already exists.`);
+                        this.addOutput(
+                            `Local branch '${localBranchName}' already exists.`
+                        );
                     }
-                    
+
                     // Checkout the local branch
-                    await git.checkout({ fs: this.fs, dir: this.dir, ref: localBranchName, force: true });
-                    this.addOutput(`Switched to local branch '${localBranchName}'.`);
-                    
+                    await git.checkout({
+                        fs: this.fs,
+                        dir: this.dir,
+                        ref: localBranchName,
+                        force: true,
+                    });
+                    this.addOutput(
+                        `Switched to local branch '${localBranchName}'.`
+                    );
+
                     // Set up tracking relationship
                     try {
                         await git.addRemote({
@@ -1999,14 +2208,21 @@ export class ExampleComponent implements OnInit, OnDestroy {
                     } catch (remoteError) {
                         // Remote might already exist, that's fine
                     }
-                    
                 } catch (branchError: any) {
-                    this.addOutput(`Failed to handle remote branch: ${branchError.message}`, 'error');
+                    this.addOutput(
+                        `Failed to handle remote branch: ${branchError.message}`,
+                        'error'
+                    );
                     throw branchError;
                 }
             } else {
                 // Regular local branch checkout
-                await git.checkout({ fs: this.fs, dir: this.dir, ref: branchName, force: true });
+                await git.checkout({
+                    fs: this.fs,
+                    dir: this.dir,
+                    ref: branchName,
+                    force: true,
+                });
                 this.addOutput(`Switched to branch '${branchName}'.`);
             }
 
@@ -2133,7 +2349,11 @@ export class ExampleComponent implements OnInit, OnDestroy {
 
     // --- Remote Branch Fetching for Clone ---
     async fetchRemoteBranchesForClone(): Promise<void> {
-        if (!this.activeRepository || !this.githubAccessToken || this.isLoadingRemoteBranches) {
+        if (
+            !this.activeRepository ||
+            !this.githubAccessToken ||
+            this.isLoadingRemoteBranches
+        ) {
             return;
         }
 
@@ -2145,38 +2365,50 @@ export class ExampleComponent implements OnInit, OnDestroy {
         });
 
         try {
-            this.addOutput(`Fetching remote branches for ${this.activeRepository.fullName}...`);
-            
+            this.addOutput(
+                `Fetching remote branches for ${this.activeRepository.fullName}...`
+            );
+
             // Use GitHub API to get branches
             const response = await fetch(
                 `https://api.github.com/repos/${this.activeRepository.fullName}/branches`,
                 {
                     headers: {
-                        'Authorization': `Bearer ${this.githubAccessToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
+                        Authorization: `Bearer ${this.githubAccessToken}`,
+                        Accept: 'application/vnd.github.v3+json',
+                    },
                 }
             );
 
             if (!response.ok) {
-                throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+                throw new Error(
+                    `GitHub API error: ${response.status} ${response.statusText}`
+                );
             }
 
             const branches = await response.json();
-            const branchNames = branches.map((branch: any) => branch.name).sort();
-            
+            const branchNames = branches
+                .map((branch: any) => branch.name)
+                .sort();
+
             this._ngZone.run(() => {
                 this.availableRemoteBranches = branchNames;
                 // Default to 'main' or 'master' if available, otherwise first branch
-                const defaultBranch = branchNames.find((name: string) => 
-                    name === 'main' || name === 'master'
-                ) || branchNames[0] || '';
+                const defaultBranch =
+                    branchNames.find(
+                        (name: string) => name === 'main' || name === 'master'
+                    ) ||
+                    branchNames[0] ||
+                    '';
                 this.selectedCloneBranch = defaultBranch;
             });
 
             this.addOutput(`Found ${branchNames.length} remote branches.`);
         } catch (error: any) {
-            this.addOutput(`Failed to fetch remote branches: ${error.message}`, 'error');
+            this.addOutput(
+                `Failed to fetch remote branches: ${error.message}`,
+                'error'
+            );
             this._ngZone.run(() => {
                 this.cloneBranchError = error.message;
             });
@@ -2340,7 +2572,7 @@ export class ExampleComponent implements OnInit, OnDestroy {
                 // this._cdRef.detectChanges();
             });
         }
-    }    // --- Getter for Template ---
+    } // --- Getter for Template ---
     get isBusy(): boolean {
         // Combine all relevant loading flags
         return (
@@ -2361,20 +2593,21 @@ export class ExampleComponent implements OnInit, OnDestroy {
 
     closeMergeRequest(): void {
         this.showMergeRequest = false;
-    }    onMergeCompleted(event: any): void {
+    }
+    onMergeCompleted(event: any): void {
         // Handle merge completion
         console.log('Merge completed:', event);
-        
+
         // Refresh the repository state after merge
         if (this.activeRepository) {
             this.loadCommitHistory();
             this.buildAndDisplayFileTree();
             this.loadBranchData(); // Reload branch data to reflect changes
         }
-        
+
         // Show success message
         this.addOutput('Merge completed successfully!', 'log');
-        
+
         // Don't auto-close the merge request - let user see the result
         // Only close if explicitly requested or if there was an error
         if (event && !event.success) {
