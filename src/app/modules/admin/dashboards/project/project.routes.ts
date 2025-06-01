@@ -5,9 +5,9 @@ import { ProjectService } from 'app/modules/admin/dashboards/project/project.ser
 
 export default [
     {
-        path     : '',
+        path: ':id',
         component: ProjectComponent,
-        resolve  : {
+        resolve: {
             data: () => inject(ProjectService).getData(),
         },
     },

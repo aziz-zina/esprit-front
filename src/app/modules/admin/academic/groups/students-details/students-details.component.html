@@ -1,0 +1,155 @@
+<div class="-m-6">
+    <h2
+        mat-dialog-title
+        class="flex items-center justify-between border-b border-gray-200 bg-gray-100 p-4"
+    >
+        <div class="flex items-center">
+            <mat-icon class="mr-2 text-blue-600">group</mat-icon>
+            <span class="text-xl font-semibold text-gray-800"
+                >Group Members Details</span
+            >
+        </div>
+        <button mat-icon-button (click)="onClose()" aria-label="Close dialog">
+            <mat-icon>close</mat-icon>
+        </button>
+    </h2>
+
+    <mat-dialog-content class="max-h-[70vh] overflow-y-auto bg-gray-50 p-6">
+        <ng-container *ngIf="students && students.length > 0">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <mat-card
+                    *ngFor="let student of students"
+                    class="flex flex-col overflow-hidden rounded-lg shadow-lg transition-all duration-300 hover:scale-[1.01] hover:shadow-xl"
+                >
+                    <div
+                        class="flex items-center border-b border-blue-100 bg-blue-50 p-4"
+                    >
+                        <img
+                            *ngIf="student.profilePicture; else defaultAvatar"
+                            [src]="student.profilePicture"
+                            alt="{{
+                                getStudentFullName(student)
+                            }}'s profile picture"
+                            class="mr-4 h-16 w-16 rounded-full border-2 border-blue-300 object-cover shadow-md"
+                        />
+                        <ng-template #defaultAvatar>
+                            <div
+                                class="mr-4 flex h-16 w-16 items-center justify-center rounded-full border-2 border-blue-300 bg-blue-200 text-2xl font-bold text-blue-800 shadow-md"
+                            >
+                                {{
+                                    (getStudentFullName(student)
+                                        ? getStudentFullName(student)[0]
+                                        : student.username[0]
+                                    ) | uppercase
+                                }}
+                            </div>
+                        </ng-template>
+                        <div>
+                            <h3 class="text-xl font-bold text-gray-800">
+                                {{ getStudentFullName(student) }}
+                            </h3>
+                            <p class="text-sm text-gray-600">
+                                {{ student.username }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <mat-card-content
+                        class="flex-grow space-y-3 p-4 text-gray-700"
+                    >
+                        <div class="flex items-center">
+                            <mat-icon class="mr-2 text-base text-blue-500"
+                                >email</mat-icon
+                            >
+                            <span class="text-sm">{{ student.email }}</span>
+                        </div>
+
+                        <div
+                            *ngIf="student.phoneNumber"
+                            class="flex items-center"
+                        >
+                            <mat-icon class="mr-2 text-base text-blue-500"
+                                >phone</mat-icon
+                            >
+                            <span class="text-sm">{{
+                                student.phoneNumber
+                            }}</span>
+                        </div>
+
+                        <div
+                            *ngIf="student.roles && student.roles.length > 0"
+                            class="flex items-center"
+                        >
+                            <mat-icon class="mr-2 text-base text-blue-500"
+                                >security</mat-icon
+                            >
+                            <span class="text-sm">
+                                Roles:
+                                <span
+                                    *ngFor="
+                                        let role of student.roles;
+                                        let last = last
+                                    "
+                                    class="mr-1 inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700"
+                                >
+                                    {{ role.name }}
+                                </span>
+                            </span>
+                        </div>
+
+                        <div
+                            *ngIf="student.createdAt"
+                            class="flex items-center"
+                        >
+                            <mat-icon class="mr-2 text-base text-gray-500"
+                                >event</mat-icon
+                            >
+                            <span class="text-xs text-gray-600"
+                                >Joined:
+                                {{
+                                    student.createdAt | date: 'mediumDate'
+                                }}</span
+                            >
+                        </div>
+
+                        <div
+                            *ngIf="student.enabled !== undefined"
+                            class="flex items-center"
+                        >
+                            <mat-icon
+                                [ngClass]="{
+                                    'text-green-500': student.enabled,
+                                    'text-red-500': !student.enabled,
+                                }"
+                                class="mr-2 text-base"
+                            >
+                                {{
+                                    student.enabled ? 'check_circle' : 'cancel'
+                                }}
+                            </mat-icon>
+                            <span class="text-xs text-gray-600"
+                                >Status:
+                                {{
+                                    student.enabled ? 'Enabled' : 'Disabled'
+                                }}</span
+                            >
+                        </div>
+
+                        <!-- Add more fields as needed following this pattern -->
+                        <!-- For example, if you want to show 'id' for debugging/admin purposes -->
+                        <!-- <div class="text-xs text-gray-400 truncate">ID: {{ student.id }}</div> -->
+                    </mat-card-content>
+                </mat-card>
+            </div>
+        </ng-container>
+    </mat-dialog-content>
+
+    <mat-dialog-actions
+        align="end"
+        class="border-t border-gray-200 bg-gray-100 p-4"
+    >
+        <button mat-raised-button color="primary" (click)="onClose()">
+            <mat-icon class="mr-1">done</mat-icon> Close
+        </button>
+    </mat-dialog-actions>
+</div>

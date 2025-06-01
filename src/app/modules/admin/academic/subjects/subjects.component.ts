@@ -110,16 +110,12 @@ export class SubjectsComponent {
                     sortable: true,
                 },
                 {
-                    header: this._translocoService.translate(
-                        'table.headers.classroom'
-                    ),
+                    header: 'Classroom',
                     field: 'classroom.name',
                     sortable: true,
                 },
                 {
-                    header: this._translocoService.translate(
-                        'table.headers.teacher'
-                    ),
+                    header: 'Teacher',
                     field: 'classroom.teacher.name',
                     sortable: true,
                     formatter: (rowData: any) =>

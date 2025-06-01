@@ -123,8 +123,8 @@ export const appRoutes: Route[] = [
                             ),
                     },
                     {
-                        path: 'teachers',
-                        title: 'routes.users.teachers.title',
+                        path: 'classrooms',
+                        title: 'routes.users.classrooms.title',
                         data: {
                             role: 'admin',
                         },
@@ -145,11 +145,11 @@ export const appRoutes: Route[] = [
                             ),
                     },
                     {
-                        path: 'students',
-                        title: 'routes.users.students.title',
+                        path: 'groups',
+                        title: 'routes.users.groups.title',
                         loadChildren: () =>
                             import(
-                                'app/modules/admin/users/students/students.routes'
+                                'app/modules/admin/academic/groups/groups.routes'
                             ),
                     },
                 ],

@@ -6,9 +6,7 @@
     >
         <div class="flex flex-col">
             <h1 class="text-2xl font-medium text-white">
-                {{
-                    updateMode() ? 'Update Academic Year' : 'Add Academic Year'
-                }}
+                {{ updateMode() ? 'Update Subject' : 'Add Subject' }}
             </h1>
         </div>
         <button
@@ -32,47 +30,29 @@
                         class="mb-3 flex-auto"
                         subscriptSizing="dynamic"
                     >
-                        <mat-label>Start Year</mat-label>
+                        <mat-label>Name</mat-label>
                         <input
-                            type="number"
-                            title="Start Year"
+                            type="text"
+                            title="Name"
                             matInput
-                            [formControlName]="'startYear'"
+                            [formControlName]="'name'"
                         />
-                        <mat-icon
-                            class="icon-size-5"
-                            matPrefix
-                            [svgIcon]="'heroicons_solid:calendar'"
-                        />
-                        @if (addForm.get('startYear').hasError('required')) {
-                            <mat-error> Start year is required. </mat-error>
+                        @if (addForm.get('name').hasError('required')) {
+                            <mat-error> Name is required. </mat-error>
                         }
                     </mat-form-field>
-                    <mat-form-field
-                        class="mb-3 flex-auto"
-                        subscriptSizing="dynamic"
-                    >
-                        <mat-label>End Year</mat-label>
-                        <input
-                            type="number"
-                            title="End Year"
-                            matInput
-                            [formControlName]="'endYear'"
-                        />
-                        <mat-icon
-                            class="icon-size-5"
-                            matPrefix
-                            [svgIcon]="'heroicons_solid:calendar'"
-                        />
-                        @if (addForm.get('endYear').hasError('required')) {
-                            <mat-error> End year is required. </mat-error>
-                        }
+                    <mat-form-field appearance="fill" class="w-full">
+                        <mat-label>Subject</mat-label>
+                        <mat-select formControlName="subjectId">
+                            @for (subject of subjects(); track subject.id) {
+                                <mat-option [value]="subject.id">
+                                    {{ subject.name }} -
+                                    {{ subject.createdAt | date }}
+                                </mat-option>
+                            }
+                        </mat-select>
+                        <mat-error>Subject is required.</mat-error>
                     </mat-form-field>
-                    @if (addForm.errors?.endYearNotOneYearAfter) {
-                        <mat-error>
-                            End year must be exactly one year after start year.
-                        </mat-error>
-                    }
                 </div>
             </div>
 

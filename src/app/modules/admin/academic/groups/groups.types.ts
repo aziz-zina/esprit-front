@@ -17,6 +17,6 @@ export interface Group {
 
 export interface AddGroupRequest {
     name: string;
-    subject: Subject;
-    students: User[];
+    subjectId: string;
+    students?: string[];
 }

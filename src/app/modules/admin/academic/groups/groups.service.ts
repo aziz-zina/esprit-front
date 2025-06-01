@@ -40,4 +40,11 @@ export class GroupService {
     createGroup(request: AddGroupRequest): Observable<Group> {
         return this._httpClient.post<Group>(`${this.API_URL}/groups`, request);
     }
+
+    assignStudent(groupId: string, studentId: string): Observable<Group> {
+        return this._httpClient.patch<Group>(
+            `${this.API_URL}/groups/assign/${groupId}/${studentId}`,
+            {}
+        );
+    }
 }

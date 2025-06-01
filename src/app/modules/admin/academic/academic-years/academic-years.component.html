@@ -1,5 +1,4 @@
 <div
-    *transloco="let t"
     class="flex min-w-0 flex-auto flex-col bg-gray-200 sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
     <div
@@ -9,7 +8,7 @@
             <button
                 type="button"
                 class="flex items-center justify-center"
-                title="back"
+                title="Back"
                 [routerLink]="['/home/administration']"
             >
                 <mat-icon
@@ -18,7 +17,7 @@
                 />
             </button>
             <div class="text-4xl font-extrabold tracking-tight">
-                {{ t('table.titles.categories') }}
+                Academic Years
             </div>
         </div>
         <div class="mt-6 flex shrink-0 items-center gap-3 sm:ml-4 sm:mt-0">
@@ -31,7 +30,7 @@
                 (click)="openAddDialog()"
             >
                 <mat-icon [svgIcon]="'heroicons_outline:plus'" />
-                <span class="ml-2">{{ t('buttons.add') }}</span>
+                <span class="ml-2">Add</span>
             </button>
         </div>
     </div>
@@ -56,84 +55,14 @@
                     [pageIndex]="pageRequest().page"
                     [pageSize]="pageRequest().size"
                     [toolbarTemplate]="toolbarTpl"
-                    [columnMenuButtonText]="t('table.columns')"
+                    [columnMenuButtonText]="'Columns'"
                     [columnMenuButtonType]="'stroked'"
                     [columnMenuButtonColor]="'primary'"
-                    [noResultText]="t('table.noResult')"
+                    [noResultText]="'No results found.'"
                     (page)="onPageEvent($event)"
                     (sortChange)="onSortChange($event)"
                 >
-                    <!-- <ng-template #expansionTpl let-row>
-                        @for (subcategory of row.subCategories; track $index) {
-                            <div
-                                class="flex items-center justify-between border-b border-gray-300 p-2"
-                            >
-                                <span class="ml-2 text-base font-semibold">{{
-                                    subcategory.name
-                                }}</span>
-                                <div class="flex items-center">
-                                    <button
-                                        mat-icon-button
-                                        type="button"
-                                        color="primary"
-                                        [disabled]="isDisabled()"
-                                        (click)="
-                                            onUpdateSubCategory(subcategory)
-                                        "
-                                    >
-                                        <mat-icon [svgIcon]="'feather:edit'" />
-                                    </button>
-                                    <button
-                                        mat-icon-button
-                                        type="button"
-                                        color="warn"
-                                        [disabled]="isDisabled()"
-                                        (click)="
-                                            onOpenDeleteSubcategoryDialog(
-                                                subcategory,
-                                                row.id
-                                            )
-                                        "
-                                    >
-                                        <mat-icon
-                                            [svgIcon]="'feather:trash-2'"
-                                        />
-                                    </button>
-                                </div>
-                            </div>
-                        } @empty {
-                            <div class="flex items-center justify-between">
-                                <span class="ml-2 text-lg font-semibold">{{
-                                    t('table.noSubCategories')
-                                }}</span>
-                                <div class="flex items-center">
-                                    <button
-                                        mat-icon-button
-                                        color="primary"
-                                        type="button"
-                                        [disabled]="isDisabled()"
-                                        (click)="openAddSubCategoryDialog(row)"
-                                    >
-                                        <mat-icon
-                                            [svgIcon]="'heroicons_outline:plus'"
-                                        />
-                                    </button>
-                                </div>
-                            </div>
-                        }
-                    </ng-template>
-                    <ng-template #toolbarTpl>
-                        <mat-form-field
-                            class="fuse-mat-dense fuse-mat-rounded hidden max-w-64 md:block"
-                            [subscriptSizing]="'dynamic'"
-                        >
-                            <mat-icon
-                                class="icon-size-5"
-                                matPrefix
-                                [svgIcon]="'heroicons_solid:magnifying-glass'"
-                            />
-                        </mat-form-field>
-                    </ng-template> -->
+                    <!-- Optional templates can be restored and updated to remove translation if needed -->
                 </mtx-grid>
             </div>
         </div>

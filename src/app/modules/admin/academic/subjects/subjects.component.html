@@ -1,5 +1,4 @@
 <div
-    *transloco="let t"
     class="flex min-w-0 flex-auto flex-col bg-gray-200 sm:absolute sm:inset-0 sm:overflow-hidden dark:bg-transparent"
 >
     <div
@@ -17,9 +16,7 @@
                     [svgIcon]="'feather:arrow-left-circle'"
                 />
             </button>
-            <div class="text-4xl font-extrabold tracking-tight">
-                {{ t('table.titles.categories') }}
-            </div>
+            <div class="text-4xl font-extrabold tracking-tight">Subjects</div>
         </div>
         <div class="mt-6 flex shrink-0 items-center gap-3 sm:ml-4 sm:mt-0">
             <button
@@ -31,7 +28,7 @@
                 (click)="openAddDialog()"
             >
                 <mat-icon [svgIcon]="'heroicons_outline:plus'" />
-                <span class="ml-2">{{ t('buttons.add') }}</span>
+                <span class="ml-2">Add</span>
             </button>
             <mat-form-field
                 class="fuse-mat-dense fuse-mat-rounded min-w-48 md:hidden"
@@ -48,7 +45,7 @@
                     title="search"
                     [formControl]="searchInputControl"
                     [autocomplete]="'off'"
-                    [placeholder]="t('search')"
+                    [placeholder]="'search'"
                 />
             </mat-form-field>
         </div>
@@ -74,10 +71,10 @@
                     [pageIndex]="pageRequest().page"
                     [pageSize]="pageRequest().size"
                     [toolbarTemplate]="toolbarTpl"
-                    [columnMenuButtonText]="t('table.columns')"
+                    [columnMenuButtonText]="'Displayed Columns'"
                     [columnMenuButtonType]="'stroked'"
                     [columnMenuButtonColor]="'primary'"
-                    [noResultText]="t('table.noResult')"
+                    [noResultText]="'No Results'"
                     (page)="onPageEvent($event)"
                     (sortChange)="onSortChange($event)"
                 >
@@ -139,7 +136,7 @@
                                 title="search"
                                 [formControl]="searchInputControl"
                                 [autocomplete]="'off'"
-                                [placeholder]="t('search')"
+                                [placeholder]="'search'"
                             />
                         </mat-form-field>
                     </ng-template>

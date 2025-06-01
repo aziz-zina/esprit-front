@@ -1,5 +1,4 @@
 <main
-    *transloco="let t; read: 'add-classroom'"
     class="barcode-container -m-6 flex min-w-80 max-w-280 flex-col sm:min-w-128"
 >
     <header
@@ -7,15 +6,15 @@
     >
         <div class="flex flex-col">
             <h1 class="text-2xl font-medium text-white">
-                {{ updateMode() ? t('updateTitle') : t('title') }}
+                {{ updateMode() ? 'Update Subject' : 'Add Subject' }}
             </h1>
         </div>
         <button
             type="button"
-            title="close"
+            title="Close"
             mat-icon-button
             [tabIndex]="-1"
-            (click)="close()"
+            (click)="close('cancel')"
         >
             <mat-icon
                 class="text-white"
@@ -31,35 +30,38 @@
                         class="mb-3 flex-auto"
                         subscriptSizing="dynamic"
                     >
-                        <mat-label>{{ t('name') }}</mat-label>
+                        <mat-label>Subject Name</mat-label>
                         <input
                             type="text"
-                            title="name"
+                            title="Subject Name"
                             matInput
                             [formControlName]="'name'"
                         />
                         @if (addForm.get('name').hasError('required')) {
-                            <mat-error>
-                                {{ t('nameRequired') }}
-                            </mat-error>
+                            <mat-error> Subject name is required. </mat-error>
                         }
                     </mat-form-field>
+
                     <mat-form-field appearance="fill" class="w-full">
-                        <mat-label>{{ t('classroom') }}</mat-label>
+                        <mat-label>Classroom</mat-label>
                         <mat-select formControlName="classroomId">
                             @for (
                                 classroom of classrooms();
                                 track classroom.id
                             ) {
                                 <mat-option [value]="classroom.id">
-                                    {{ classroom.name }}
+                                    {{ classroom.name }} ({{
+                                        classroom.academicYear.startYear
+                                    }}
+                                    - {{ classroom.academicYear.endYear }})
                                 </mat-option>
                             }
                         </mat-select>
-                        <mat-error>{{ t('classroomRequired') }}</mat-error>
+                        <mat-error>Classroom is required.</mat-error>
                     </mat-form-field>
+
                     <mat-form-field appearance="fill" class="w-full">
-                        <mat-label>{{ t('teacher') }}</mat-label>
+                        <mat-label>Teacher</mat-label>
                         <mat-select formControlName="teacherId">
                             @for (teacher of teachers(); track teacher.id) {
                                 <mat-option [value]="teacher.id">
@@ -68,15 +70,12 @@
                                 </mat-option>
                             }
                         </mat-select>
-                        <mat-error>{{ t('teacherRequired') }}</mat-error>
+                        <mat-error>Teacher is required.</mat-error>
                     </mat-form-field>
                 </div>
             </div>
 
-            <div
-                *transloco="let t; read: 'buttons'"
-                class="mt-8 flex justify-end"
-            >
+            <div class="mt-8 flex justify-end">
                 <button
                     type="button"
                     class="px-8 text-white"
@@ -87,7 +86,7 @@
                 >
                     @if (!addForm.disabled) {
                         <span>
-                            {{ updateMode() ? t('update') : t('create') }}
+                            {{ updateMode() ? 'Update' : 'Create' }}
                         </span>
                     }
                     @if (addForm.disabled) {

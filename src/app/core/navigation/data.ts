@@ -16,13 +16,6 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:chart-pie',
                 link: '/dashboards/analytics',
             },
-            {
-                id: 'dashboards.project',
-                title: 'Project',
-                type: 'basic',
-                icon: 'heroicons_outline:clipboard-document-check',
-                link: '/dashboards/project',
-            },
         ],
     },
     {
@@ -68,11 +61,11 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link: '/academic/academic-years',
             },
             {
-                id: 'teachers',
-                title: 'Teachers',
+                id: 'classrooms',
+                title: 'Classrooms',
                 type: 'basic',
                 icon: 'heroicons_outline:academic-cap',
-                link: '/academic/teachers',
+                link: '/academic/classrooms',
             },
             {
                 id: 'subjects',
@@ -87,13 +80,6 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 type: 'basic',
                 icon: 'mat_solid:groups',
                 link: '/academic/groups',
-            },
-            {
-                id: 'repositories',
-                title: 'Repositories',
-                type: 'basic',
-                icon: 'mat_solid:class',
-                link: '/academic/repositories',
             },
         ],
     },

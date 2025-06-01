@@ -71,7 +71,7 @@ export class UserService {
             .set('size', pageRequest.size)
             .set('page', pageRequest.page)
             .set('sort', pageRequest.sort)
-            .set('query', pageRequest.search)
+            .set('search', pageRequest.search)
             .set('sortDirection', pageRequest.sortDirection)
             .set('role', role);
 

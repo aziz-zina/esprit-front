@@ -52,6 +52,12 @@ export class ProjectService {
         return this._httpClient.get<string[]>(`${this.API_URL}/repos`);
     }
 
+    getRepositoriesByGroupId(groupId: string): Observable<string[]> {
+        return this._httpClient.get<string[]>(
+            `${this.API_URL}/repos/${groupId}`
+        );
+    }
+
     getStats(repoName: string): Observable<ProjectStats> {
         return this._httpClient.get<any>(
             `${this.API_URL}/repos/${repoName}/statistics`

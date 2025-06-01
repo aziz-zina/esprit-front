@@ -95,9 +95,7 @@ export class AcademicYearsComponent {
         this._translocoService.langChanges$.subscribe(() => {
             this.columns.set([
                 {
-                    header: this._translocoService.translate(
-                        'table.headers.year'
-                    ),
+                    header: 'Year',
                     field: 'name',
                     sortable: true,
                     formatter: (rowData: any) =>
@@ -105,9 +103,7 @@ export class AcademicYearsComponent {
                 },
 
                 {
-                    header: this._translocoService.translate(
-                        'table.headers.createdAt'
-                    ),
+                    header: 'createdAt',
                     field: 'createdAt',
                     type: 'date',
                     sortable: true,

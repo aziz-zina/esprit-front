@@ -1,5 +1,4 @@
 <main
-    *transloco="let t; read: 'add-academicYear'"
     class="barcode-container -m-6 flex min-w-80 max-w-280 flex-col sm:min-w-128"
 >
     <header
@@ -7,15 +6,15 @@
     >
         <div class="flex flex-col">
             <h1 class="text-2xl font-medium text-white">
-                {{ updateMode() ? t('updateTitle') : t('title') }}
+                {{ updateMode() ? 'Update Classroom' : 'Add Classroom' }}
             </h1>
         </div>
         <button
             type="button"
-            title="close"
+            title="Close"
             mat-icon-button
             [tabIndex]="-1"
-            (click)="close()"
+            (click)="close('cancel')"
         >
             <mat-icon
                 class="text-white"
@@ -31,7 +30,7 @@
                         class="mb-3 flex-auto"
                         subscriptSizing="dynamic"
                     >
-                        <mat-label>{{ t('name') }}</mat-label>
+                        <mat-label>Name</mat-label>
                         <input
                             type="text"
                             title="name"
@@ -39,24 +38,23 @@
                             [formControlName]="'name'"
                         />
                         @if (addForm.get('name').hasError('required')) {
-                            <mat-error>
-                                {{ t('nameRequired') }}
-                            </mat-error>
+                            <mat-error> Name is Required </mat-error>
                         }
                     </mat-form-field>
                     <mat-form-field appearance="fill" class="w-full">
-                        <mat-label>{{ t('subCategory') }}</mat-label>
+                        <mat-label>Academic Year</mat-label>
                         <mat-select formControlName="academicYearId">
                             @for (
                                 academicYear of academicYears();
                                 track academicYear.id
                             ) {
                                 <mat-option [value]="academicYear.id">
-                                    {{ academicYear.startYear }} - {{ academicYear.endYear }}
+                                    {{ academicYear.startYear }} -
+                                    {{ academicYear.endYear }}
                                 </mat-option>
                             }
                         </mat-select>
-                        <mat-error>{{ t('academicYearRequired') }}</mat-error>
+                        <mat-error>Academic Year is required</mat-error>
                     </mat-form-field>
                 </div>
             </div>
@@ -75,7 +73,7 @@
                 >
                     @if (!addForm.disabled) {
                         <span>
-                            {{ updateMode() ? t('update') : t('create') }}
+                            {{ updateMode() ? 'Update' : 'Create' }}
                         </span>
                     }
                     @if (addForm.disabled) {

@@ -45,7 +45,6 @@ import { Group } from '../../admin/academic/groups/groups.types'; // Ensure Grou
         TranslocoModule,
     ],
     templateUrl: './pick-group.component.html',
-    styleUrl: './pick-group.component.scss',
 })
 export class PickGroupComponent implements OnInit {
     // -----------------------------------------------------------------------------------------------------

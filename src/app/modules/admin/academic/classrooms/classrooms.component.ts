@@ -97,16 +97,12 @@ export class ClassroomsComponent {
         this._translocoService.langChanges$.subscribe(() => {
             this.columns.set([
                 {
-                    header: this._translocoService.translate(
-                        'table.headers.name'
-                    ),
+                    header: 'Name',
                     field: 'name',
                     sortable: true,
                 },
                 {
-                    header: this._translocoService.translate(
-                        'table.headers.year'
-                    ),
+                    header: 'Academic Year',
                     field: 'academicYear',
                     sortable: true,
                     formatter: (rowData: any) =>
@@ -114,9 +110,7 @@ export class ClassroomsComponent {
                 },
 
                 {
-                    header: this._translocoService.translate(
-                        'table.headers.createdAt'
-                    ),
+                    header: 'Created At',
                     field: 'createdAt',
                     type: 'date',
                     sortable: true,

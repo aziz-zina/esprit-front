@@ -15,8 +15,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslocoModule } from '@jsverse/transloco';
+import { HotToastService } from '@ngxpert/hot-toast';
 import { ProjectService } from 'app/modules/admin/dashboards/project/project.service';
 import { ApexOptions, NgApexchartsModule } from 'ng-apexcharts';
 import { Subject, switchMap, tap } from 'rxjs';
@@ -39,7 +40,7 @@ import { RepoTreeComponent } from './repo-tree/repo-tree.component';
         MatButtonToggleModule,
         NgApexchartsModule,
         MatTableModule,
-        RepoTreeComponent
+        RepoTreeComponent,
     ],
 })
 export class ProjectComponent implements OnInit, OnDestroy {
@@ -47,6 +48,8 @@ export class ProjectComponent implements OnInit, OnDestroy {
     // @ Dependencies
     // -----------------------------------------------------------------------------------------------------
     private readonly _projectService = inject(ProjectService);
+    private readonly _activatedRoute = inject(ActivatedRoute);
+    private readonly _toastService = inject(HotToastService);
     private readonly _router = inject(Router);
     // -----------------------------------------------------------------------------------------------------
     // @ Observables and signals
@@ -55,6 +58,7 @@ export class ProjectComponent implements OnInit, OnDestroy {
     readonly selectedProject = signal<string>('');
     readonly projectStats = signal<ProjectStats>(null);
     readonly commits = signal<Commit[]>([]);
+    readonly groupId = signal<string>('');
     // -----------------------------------------------------------------------------------------------------
     // @ Public properties
     // -----------------------------------------------------------------------------------------------------
@@ -76,8 +80,17 @@ export class ProjectComponent implements OnInit, OnDestroy {
      * On init
      */
     ngOnInit(): void {
+        this.groupId.set(this._activatedRoute.snapshot.paramMap.get('id'));
+
+        // if (!id) {
+        //     // Navigate to fallback route if no id is found
+        //     this._toastService.error('Pick a category');
+        //     this._router.navigate(['/academic/groups']);
+        //     return;
+        // }
+
         this._projectService
-            .getRepositories()
+            .getRepositoriesByGroupId(this.groupId())
             .pipe(
                 tap((repos) => {
                     this.repositories.set(repos);

@@ -37,7 +37,7 @@ export class SubjectService {
     }
 
     getSubjects(): Observable<Subject[]> {
-        return this._httpClient.get<Subject[]>(`${this.API_URL}/subjects`);
+        return this._httpClient.get<Subject[]>(`${this.API_URL}/subjects/all`);
     }
 
     createSubject(request: AddSubjectRequest): Observable<Subject> {
