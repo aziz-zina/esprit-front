@@ -289,5 +289,13 @@
         "add-error": "An error occurred while adding the User. Please try again later.",
         "update-success": "User updated successfully",
         "update-error": "An error occurred while updating the User. Please try again later."
+    },
+    "add-mark": {
+        "add-success": "Group mark added successfully",
+        "add-error": "An error occurred while adding the group mark. Please try again later."
+    },
+    "add-student-mark": {
+        "add-success": "Student mark added successfully",
+        "add-error": "An error occurred while adding the student mark. Please try again later."
     }
 }

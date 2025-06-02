@@ -11,12 +11,40 @@ export interface Group {
     version: number;
     name: string;
     subject: Subject;
-    students: User[];
+    students: GroupStudent[];
     repositories: RepositoryContent[];
+    mark?: number;
+    comment?: string;
 }
 
 export interface AddGroupRequest {
     name: string;
     subjectId: string;
     students?: string[];
+}
+
+export interface GroupMarkDto {
+    mark: number;
+    comment?: string;
+}
+
+export interface StudentMarkDto {
+    mark: number;
+    comment?: string;
+}
+
+export interface GroupStudent {
+    id: string;
+    student: User;
+    individualMark?: number;
+    individualComment?: string;
+    finalMark?: number;
+}
+
+export interface GroupStudentDto {
+    id: string;
+    groupId: string;
+    studentId: string;
+    mark?: number;
+    comment?: string;
 }

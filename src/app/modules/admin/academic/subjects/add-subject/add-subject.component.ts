@@ -67,11 +67,18 @@ export class AddSubjectComponent {
     readonly classrooms = signal([]);
     readonly teachers = signal([]);
     readonly updateMode = signal(!!this.DIALOG_DATA?.subject);
-
     addForm = this._formBuilder.group({
         name: ['', [Validators.required]],
         classroomId: ['', [Validators.required]],
         teacherId: ['', [Validators.required]],
+        groupMarkPercentage: [
+            0,
+            [Validators.required, Validators.min(0), Validators.max(100)],
+        ],
+        individualMarkPercentage: [
+            0,
+            [Validators.required, Validators.min(0), Validators.max(100)],
+        ],
     });
 
     // -----------------------------------------------------------------------------------------------------
@@ -136,12 +143,14 @@ export class AddSubjectComponent {
         //     )
         //     .subscribe();
     }
-
     create() {
         const payload: AddSubjectRequest = {
             name: this.addForm.value.name,
             classroomId: this.addForm.value.classroomId,
             teacherId: this.addForm.value.teacherId,
+            groupMarkPercentage: this.addForm.value.groupMarkPercentage,
+            individualMarkPercentage:
+                this.addForm.value.individualMarkPercentage,
         };
         this._subjectService
             .createSubject(payload)

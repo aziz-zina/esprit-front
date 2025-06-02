@@ -59,7 +59,6 @@
                         </mat-select>
                         <mat-error>Classroom is required.</mat-error>
                     </mat-form-field>
-
                     <mat-form-field appearance="fill" class="w-full">
                         <mat-label>Teacher</mat-label>
                         <mat-select formControlName="teacherId">
@@ -71,6 +70,86 @@
                             }
                         </mat-select>
                         <mat-error>Teacher is required.</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field
+                        class="mb-3 flex-auto"
+                        subscriptSizing="dynamic"
+                    >
+                        <mat-label>Group Mark Percentage</mat-label>
+                        <input
+                            type="number"
+                            title="Group Mark Percentage"
+                            matInput
+                            min="0"
+                            max="100"
+                            [formControlName]="'groupMarkPercentage'"
+                        />
+                        @if (
+                            addForm
+                                .get('groupMarkPercentage')
+                                .hasError('required')
+                        ) {
+                            <mat-error>
+                                Group mark percentage is required.
+                            </mat-error>
+                        }
+                        @if (
+                            addForm.get('groupMarkPercentage').hasError('min')
+                        ) {
+                            <mat-error>
+                                Percentage must be at least 0.
+                            </mat-error>
+                        }
+                        @if (
+                            addForm.get('groupMarkPercentage').hasError('max')
+                        ) {
+                            <mat-error>
+                                Percentage must be at most 100.
+                            </mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field
+                        class="mb-3 flex-auto"
+                        subscriptSizing="dynamic"
+                    >
+                        <mat-label>Individual Mark Percentage</mat-label>
+                        <input
+                            type="number"
+                            title="Individual Mark Percentage"
+                            matInput
+                            min="0"
+                            max="100"
+                            [formControlName]="'individualMarkPercentage'"
+                        />
+                        @if (
+                            addForm
+                                .get('individualMarkPercentage')
+                                .hasError('required')
+                        ) {
+                            <mat-error>
+                                Individual mark percentage is required.
+                            </mat-error>
+                        }
+                        @if (
+                            addForm
+                                .get('individualMarkPercentage')
+                                .hasError('min')
+                        ) {
+                            <mat-error>
+                                Percentage must be at least 0.
+                            </mat-error>
+                        }
+                        @if (
+                            addForm
+                                .get('individualMarkPercentage')
+                                .hasError('max')
+                        ) {
+                            <mat-error>
+                                Percentage must be at most 100.
+                            </mat-error>
+                        }
                     </mat-form-field>
                 </div>
             </div>

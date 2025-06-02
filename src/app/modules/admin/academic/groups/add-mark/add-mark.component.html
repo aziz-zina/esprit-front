@@ -1,0 +1,128 @@
+<main
+    class="barcode-container -m-6 flex min-w-80 max-w-280 flex-col sm:min-w-128"
+>
+    <header
+        class="flex h-16 flex-0 items-center justify-between bg-primary pl-6 pr-3 text-on-primary sm:pl-8 sm:pr-5 rtl:flex-row-reverse dark:bg-primary-600"
+    >
+        <div class="flex flex-col">
+            <h1 class="text-2xl font-medium text-white">
+                Add Mark to Group: {{ group().name }}
+            </h1>
+        </div>
+        <button
+            type="button"
+            title="Close"
+            mat-icon-button
+            [tabIndex]="-1"
+            (click)="close('cancel')"
+        >
+            <mat-icon
+                class="text-white"
+                [svgIcon]="'heroicons_outline:x-mark'"
+            />
+        </button>
+    </header>
+    <div class="bg-card overflow-y-auto rounded p-4 shadow">
+        <form [formGroup]="markForm">
+            <div class="flex flex-col space-y-3">
+                <div class="flex flex-col">
+                    <div class="mb-4 rounded-lg bg-gray-50 p-4">
+                        <h3 class="mb-2 text-lg font-medium text-gray-800">
+                            Group Information
+                        </h3>
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">Subject:</span>
+                            {{ group().subject.name }}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            <span class="font-medium">Students:</span>
+                            {{ group().students.length }}
+                        </p>
+                        @if (
+                            group().mark !== undefined && group().mark !== null
+                        ) {
+                            <p class="text-sm text-gray-600">
+                                <span class="font-medium">Current Mark:</span>
+                                {{ group().mark }}/20
+                            </p>
+                        }
+                    </div>
+
+                    <mat-form-field
+                        class="mb-3 flex-auto"
+                        subscriptSizing="dynamic"
+                    >
+                        <mat-label>Mark (0-20)</mat-label>
+                        <input
+                            type="number"
+                            title="Group Mark"
+                            matInput
+                            min="0"
+                            max="20"
+                            step="0.1"
+                            [formControlName]="'mark'"
+                        />
+                        @if (markForm.get('mark').hasError('required')) {
+                            <mat-error> Mark is required. </mat-error>
+                        }
+                        @if (markForm.get('mark').hasError('min')) {
+                            <mat-error> Mark must be at least 0. </mat-error>
+                        }
+                        @if (markForm.get('mark').hasError('max')) {
+                            <mat-error> Mark must be at most 20. </mat-error>
+                        }
+                    </mat-form-field>
+
+                    <mat-form-field
+                        class="mb-3 flex-auto"
+                        subscriptSizing="dynamic"
+                    >
+                        <mat-label>Comment (Optional)</mat-label>
+                        <textarea
+                            matInput
+                            rows="4"
+                            placeholder="Add any comments about the group's performance..."
+                            [formControlName]="'comment'"
+                        ></textarea>
+                    </mat-form-field>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end space-x-3">
+                <button
+                    type="button"
+                    class="px-6"
+                    mat-stroked-button
+                    (click)="close('cancel')"
+                >
+                    Cancel
+                </button>
+                <button
+                    type="button"
+                    class="px-8 text-white"
+                    mat-flat-button
+                    [color]="'primary'"
+                    [disabled]="!markForm.valid || markForm.disabled"
+                    (click)="submitForm()"
+                >
+                    @if (!markForm.disabled) {
+                        <span>
+                            {{
+                                group().mark !== undefined &&
+                                group().mark !== null
+                                    ? 'Update Mark'
+                                    : 'Add Mark'
+                            }}
+                        </span>
+                    }
+                    @if (markForm.disabled) {
+                        <mat-progress-spinner
+                            [diameter]="24"
+                            [mode]="'indeterminate'"
+                        />
+                    }
+                </button>
+            </div>
+        </form>
+    </div>
+</main>

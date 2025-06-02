@@ -121,7 +121,20 @@ export class SubjectsComponent {
                     formatter: (rowData: any) =>
                         `${rowData.teacher.firstName} ${rowData.teacher.lastName}`,
                 },
-
+                {
+                    header: 'Group Mark %',
+                    field: 'groupMarkPercentage',
+                    sortable: true,
+                    formatter: (rowData: any) =>
+                        `${rowData.groupMarkPercentage}%`,
+                },
+                {
+                    header: 'Individual Mark %',
+                    field: 'individualMarkPercentage',
+                    sortable: true,
+                    formatter: (rowData: any) =>
+                        `${rowData.individualMarkPercentage}%`,
+                },
                 {
                     header: this._translocoService.translate(
                         'table.headers.createdAt'

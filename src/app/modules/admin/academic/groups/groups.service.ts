@@ -4,7 +4,13 @@ import { APP_API_URL } from 'app/app.config';
 import { Page } from 'app/models/pagination/page-response.types';
 import { PageRequest } from 'app/models/pagination/pageRequest';
 import { Observable } from 'rxjs';
-import { AddGroupRequest, Group } from './groups.types';
+import {
+    AddGroupRequest,
+    Group,
+    GroupMarkDto,
+    GroupStudentDto,
+    StudentMarkDto,
+} from './groups.types';
 
 @Injectable({ providedIn: 'root' })
 export class GroupService {
@@ -45,6 +51,24 @@ export class GroupService {
         return this._httpClient.patch<Group>(
             `${this.API_URL}/groups/assign/${groupId}/${studentId}`,
             {}
+        );
+    }
+
+    addMarkToGroup(groupId: string, markDto: GroupMarkDto): Observable<Group> {
+        return this._httpClient.put<Group>(
+            `${this.API_URL}/groups/${groupId}/mark`,
+            markDto
+        );
+    }
+
+    addMarkToStudent(
+        groupId: string,
+        studentId: string,
+        markDto: StudentMarkDto
+    ): Observable<GroupStudentDto> {
+        return this._httpClient.put<GroupStudentDto>(
+            `${this.API_URL}/groups/${groupId}/student/${studentId}/mark`,
+            markDto
         );
     }
 }

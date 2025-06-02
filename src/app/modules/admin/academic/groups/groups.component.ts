@@ -22,7 +22,6 @@ import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterModule } from '@angular/router';
-import { User } from '@core/user/user.types';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
 import { MtxGridColumn, MtxGridModule } from '@ng-matero/extensions/grid';
@@ -37,6 +36,7 @@ import {
     switchMap,
 } from 'rxjs';
 import { AddGroupComponent } from './add-group/add-group.component';
+import { AddMarkComponent } from './add-mark/add-mark.component';
 import { AssignStudentComponent } from './assign-student/assign-student.component';
 import { GroupService } from './groups.service';
 import { Group } from './groups.types';
@@ -132,6 +132,15 @@ export class GroupsComponent {
                     sortable: true,
                     formatter: (rowData: any) => rowData.students.length,
                 },
+                {
+                    header: 'Mark',
+                    field: 'mark',
+                    sortable: true,
+                    formatter: (rowData: any) =>
+                        rowData.mark !== undefined && rowData.mark !== null
+                            ? `${rowData.mark}/20`
+                            : 'Not marked',
+                },
 
                 {
                     header: this._translocoService.translate(
@@ -152,6 +161,14 @@ export class GroupsComponent {
                     buttons: [
                         {
                             type: 'icon',
+                            text: 'add mark',
+                            svgIcon: 'feather:star',
+                            tooltip: 'Add/Update Mark',
+                            color: 'primary',
+                            click: (rowData) => this.openMarkDialog(rowData),
+                        },
+                        {
+                            type: 'icon',
                             text: 'assign student',
                             svgIcon: 'feather:user-plus',
                             tooltip: 'assign student',
@@ -165,7 +182,7 @@ export class GroupsComponent {
                             tooltip: 'Group Info',
                             color: 'accent',
                             click: (rowData) =>
-                                this.openGroupMembersDetails(rowData.students),
+                                this.openGroupMembersDetails(rowData),
                         },
                         {
                             type: 'icon',
@@ -260,9 +277,22 @@ export class GroupsComponent {
         });
     }
 
-    openGroupMembersDetails(students: User[]): void {
+    openMarkDialog(group: Group): void {
+        const dialogRef = this._matDialog.open(AddMarkComponent, {
+            data: { group },
+        });
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result === 'success') {
+                this.fetchPage();
+            }
+        });
+    }
+    openGroupMembersDetails(group: Group): void {
         const dialogRef = this._matDialog.open(StudentsDetailsComponent, {
-            data: students,
+            data: {
+                students: group.students,
+                group: group,
+            },
         });
         dialogRef.afterClosed().subscribe((result) => {
             if (result === 'success') {

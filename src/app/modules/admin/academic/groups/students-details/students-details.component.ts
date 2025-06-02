@@ -4,40 +4,15 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import {
     MAT_DIALOG_DATA,
+    MatDialog,
     MatDialogModule,
     MatDialogRef,
 } from '@angular/material/dialog'; // Import MatDialogRef
 import { MatDividerModule } from '@angular/material/divider'; // For dividers if needed
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar'; // For the header
-
-// Define the User interface (make sure this is accessible or in a shared file)
-export interface User {
-    id: string;
-    createdAt?: string;
-    createdBy?: string;
-    email: string;
-    username: string;
-    emailVerified?: boolean;
-    enabled?: boolean;
-    firstName?: string;
-    profilePicture?: string;
-    fullName?: string;
-    // locale: LocaleType; // If you have this type, uncomment
-    lastModifiedBy?: string;
-    lastName?: string;
-    phoneNumber?: string;
-    roles?: Role[];
-    notificationPreference?: string;
-    updatedAt?: string;
-    version?: number;
-}
-
-export interface Role {
-    id: string;
-    name: string; // Assuming Role has a name
-    description?: string;
-}
+import { AddStudentMarkComponent } from '../add-student-mark/add-student-mark.component';
+import { Group, GroupStudent } from '../groups.types';
 
 @Component({
     standalone: true, // Assuming you are using standalone components
@@ -54,15 +29,19 @@ export interface Role {
     templateUrl: './students-details.component.html',
 })
 export class StudentsDetailsComponent implements OnInit {
-    // Correctly type the injected data as an array of User
-    readonly students: User[] = inject(MAT_DIALOG_DATA);
+    // Correctly type the injected data as GroupStudent array
+    readonly data = inject(MAT_DIALOG_DATA);
+    readonly students: GroupStudent[] = this.data.students || this.data;
+    readonly group: Group = this.data.group;
     private readonly _dialogRef = inject(
         MatDialogRef<StudentsDetailsComponent>
     ); // Inject MatDialogRef
+    private readonly _matDialog = inject(MatDialog);
 
     ngOnInit(): void {
         // You can log the data here to confirm it's received
-        // console.log('Received students:', this.students);
+        console.log('Received students:', this.students);
+        console.log('Received group:', this.group);
     }
 
     onClose(): void {
@@ -73,8 +52,8 @@ export class StudentsDetailsComponent implements OnInit {
         // and this.fetchPage() will *not* be called.
         this._dialogRef.close();
     }
-
-    getStudentFullName(student: User): string {
+    getStudentFullName(groupStudent: GroupStudent): string {
+        const student = groupStudent.student;
         if (student.fullName) {
             return student.fullName;
         }
@@ -88,5 +67,22 @@ export class StudentsDetailsComponent implements OnInit {
             return student.lastName;
         }
         return student.username; // Fallback to username
+    }
+
+    openStudentMarkDialog(groupStudent: GroupStudent): void {
+        const dialogRef = this._matDialog.open(AddStudentMarkComponent, {
+            data: {
+                group: this.group,
+                student: groupStudent.student,
+                currentMark: groupStudent.individualMark,
+                currentComment: groupStudent.individualComment,
+            },
+        });
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result === 'success') {
+                // Optionally refresh data or notify parent
+                this._dialogRef.close('success');
+            }
+        });
     }
 }
