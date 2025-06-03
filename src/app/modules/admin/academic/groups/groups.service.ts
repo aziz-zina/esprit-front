@@ -66,6 +66,7 @@ export class GroupService {
         studentId: string,
         markDto: StudentMarkDto
     ): Observable<GroupStudentDto> {
+        console.log(studentId);
         return this._httpClient.put<GroupStudentDto>(
             `${this.API_URL}/groups/${groupId}/student/${studentId}/mark`,
             markDto

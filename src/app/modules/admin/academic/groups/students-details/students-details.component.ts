@@ -70,6 +70,7 @@ export class StudentsDetailsComponent implements OnInit {
     }
 
     openStudentMarkDialog(groupStudent: GroupStudent): void {
+        console.log('salem hné: ', groupStudent);
         const dialogRef = this._matDialog.open(AddStudentMarkComponent, {
             data: {
                 group: this.group,

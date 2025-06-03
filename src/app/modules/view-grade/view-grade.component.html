@@ -1,0 +1,182 @@
+<div class="w-full overflow-auto bg-slate-50 p-4 md:p-8">
+    <div class="mb-8 text-center">
+        <h1 class="mb-2 text-4xl font-bold text-slate-800">
+            My Groups & Grades
+        </h1>
+        <p class="text-slate-600">
+            Track your academic progress across all subjects
+        </p>
+    </div>
+
+    <!-- Search -->
+    <div class="mx-auto mb-6 max-w-xl">
+        <mat-form-field class="w-full" appearance="outline">
+            <mat-label>Search groups</mat-label>
+            <input
+                matInput
+                placeholder="Enter group or subject name..."
+                [(ngModel)]="searchTerm"
+            />
+            <button
+                mat-icon-button
+                matSuffix
+                *ngIf="searchTerm"
+                (click)="searchTerm = ''"
+            >
+                <mat-icon>close</mat-icon>
+            </button>
+        </mat-form-field>
+    </div>
+
+    <ng-container *ngIf="filteredGroups().length > 0; else noGroups">
+        <div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            <mat-card
+                *ngFor="let group of filteredGroups()"
+                class="overflow-hidden rounded-xl border border-slate-200 p-0 shadow-md"
+            >
+                <!-- @if(getStudentData(group)?.finalMark && getStudentData(group)?.individualMark){} -->
+                <!-- Header -->
+                <mat-card-header class="bg-sky-100 px-4 py-3">
+                    <div
+                        class="mat-card-title mr-4 flex items-center gap-2 text-lg font-bold text-sky-800"
+                    >
+                        <mat-icon>groups</mat-icon>
+                        {{ group.name }}
+                    </div>
+                    <div class="mat-card-subtitle my-auto text-sm text-sky-600">
+                        {{ group.subject.name }} &mdash; Prof.
+                        {{ group.subject.teacher.firstName }}
+                        {{ group.subject.teacher.lastName }}
+                    </div>
+                </mat-card-header>
+
+                <!-- Content -->
+                <mat-card-content class="space-y-4 p-4">
+                    <!-- Grades -->
+                    <div>
+                        <h4
+                            class="mb-2 flex items-center gap-2 font-semibold text-slate-700"
+                        >
+                            <mat-icon class="text-sky-600">assessment</mat-icon>
+                            Grades
+                        </h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center justify-between">
+                                <span>Your Grade</span>
+                                @if (getStudentData(group)?.individualMark) {
+                                    <mat-chip selected disabled>
+                                        {{
+                                            getStudentData(group)
+                                                ?.individualMark
+                                        }}/20
+                                    </mat-chip>
+                                } @else {
+                                    <mat-chip selected disabled> N/A </mat-chip>
+                                }
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>Group Grade</span>
+                                @if (getStudentData(group)?.finalMark) {
+                                    <mat-chip selected disabled>
+                                        {{ group.mark }}/20
+                                    </mat-chip>
+                                } @else {
+                                    <mat-chip selected disabled> N/A </mat-chip>
+                                }
+                            </div>
+                            <div
+                                *ngIf="getStudentData(group)?.finalMark"
+                                class="flex items-center justify-between"
+                            >
+                                <span>Final Grade</span>
+                                <mat-chip selected disabled>
+                                    {{ getStudentData(group)?.finalMark }}/20
+                                </mat-chip>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feedback -->
+                    <div>
+                        <h4
+                            class="mb-2 flex items-center gap-2 font-semibold text-slate-700"
+                        >
+                            <mat-icon class="text-sky-600">comment</mat-icon>
+                            Professor's Feedback
+                        </h4>
+                        <p class="text-sm font-medium text-slate-500">Group:</p>
+                        @if (group.comment) {
+                            <p
+                                class="min-h-[40px] rounded bg-slate-50 p-2 italic"
+                            >
+                                {{ group.comment }}
+                            </p>
+                        } @else {
+                            <p
+                                class="min-h-[40px] rounded bg-slate-50 p-2 italic text-gray-300"
+                            >
+                                {{ 'No group comment provided.' }}
+                            </p>
+                        }
+                        <ng-container
+                            *ngIf="getStudentData(group) as studentInfo"
+                        >
+                            <p class="mt-2 text-sm font-medium text-slate-500">
+                                You:
+                            </p>
+                            @if (studentInfo.individualComment) {
+                                <p
+                                    class="min-h-[40px] rounded bg-slate-50 p-2 italic"
+                                >
+                                    {{ studentInfo.individualComment }}
+                                </p>
+                            } @else {
+                                <p
+                                    class="min-h-[40px] rounded bg-slate-50 p-2 italic text-gray-300"
+                                >
+                                    {{ 'No individual comment provided.' }}
+                                </p>
+                            }
+                        </ng-container>
+                    </div>
+
+                    <!-- Repositories -->
+                    <div *ngIf="group.repositories?.length">
+                        <h4
+                            class="mb-2 flex items-center gap-2 font-semibold text-slate-700"
+                        >
+                            <mat-icon class="text-sky-600">folder_zip</mat-icon>
+                            Repositories
+                        </h4>
+                        <ul class="ml-6 list-disc text-sm text-slate-600">
+                            <li *ngFor="let repo of group.repositories">
+                                <a
+                                    [href]="repo.url"
+                                    target="_blank"
+                                    class="text-sky-700 hover:underline"
+                                >
+                                    {{ repo.name }}
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </mat-card-content>
+            </mat-card>
+        </div>
+    </ng-container>
+
+    <!-- Empty State -->
+    <ng-template #noGroups>
+        <div class="py-12 text-center">
+            <mat-icon class="mb-4 text-6xl text-slate-400"
+                >sentiment_dissatisfied</mat-icon
+            >
+            <p class="text-xl text-slate-500">
+                You are not currently part of any groups.
+            </p>
+            <p class="text-slate-400">
+                If this is a mistake, contact your professor.
+            </p>
+        </div>
+    </ng-template>
+</div>

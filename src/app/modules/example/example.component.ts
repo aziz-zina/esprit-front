@@ -107,8 +107,7 @@ type GitStatusCode = (typeof GIT_STATUS)[keyof typeof GIT_STATUS];
         CodemirrorModule,
         DatePipe,
         MergeRequestComponent,
-        CommitDiffViewerComponent,
-        HighlightDirective,
+        CommitDiffViewerComponent
     ],
     templateUrl: './example.component.html',
     providers: [DatePipe],
