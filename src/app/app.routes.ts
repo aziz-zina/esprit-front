@@ -177,6 +177,14 @@ export const appRoutes: Route[] = [
                 },
                 loadChildren: () => import('./modules/example/example.routes'),
             },
+            {
+                path: 'view-grade',
+                data: {
+                    role: 'student',
+                },
+                loadChildren: () =>
+                    import('./modules/view-grade/view-grade.routes'),
+            },
         ],
     },
     {

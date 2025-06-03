@@ -110,4 +110,11 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         icon: 'feather:github',
         link: '/example',
     },
+    {
+        id: 'view-grade',
+        title: 'Grades',
+        type: 'basic',
+        icon: 'mat_solid:military_tech',
+        link: '/view-grade',
+    },
 ];
