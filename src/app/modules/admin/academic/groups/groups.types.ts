@@ -13,6 +13,7 @@ export interface Group {
     subject: Subject;
     students: GroupStudent[];
     repositories: RepositoryContent[];
+    nbRepositories?: number;
     mark?: number;
     comment?: string;
 }
@@ -39,12 +40,35 @@ export interface GroupStudent {
     individualMark?: number;
     individualComment?: string;
     finalMark?: number;
+    tasks?: Task[];
 }
 
 export interface GroupStudentDto {
     id: string;
-    groupId: string;
-    studentId: string;
+    group: Group;
+    student: User;
     mark?: number;
     comment?: string;
+    tasks?: Task[];
+}
+
+export interface Task {
+    id: string;
+    description: string;
+    dueDate: string;
+    createdBy: string;
+    lastModifiedBy: string;
+    createdAt: string;
+    updatedAt: string | null;
+    version: number;
+    mark: number;
+    done: boolean;
+    comment: string;
+    branchLink: string;
+}
+
+export interface AddTaskRequest {
+    description: string;
+    dueDate: string;
+    groupStudentId: string;
 }

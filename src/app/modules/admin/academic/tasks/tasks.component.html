@@ -1,0 +1,326 @@
+<div class="min-h-screen w-full bg-gradient-to-br from-slate-50 to-slate-200">
+    <!-- Header -->
+    <div class="border-b border-slate-200 bg-white shadow-sm">
+        <div
+            class="mx-auto flex w-full flex-col gap-4 px-6 py-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+            <div class="flex items-center gap-4">
+                <button
+                    type="button"
+                    class="text-indigo-500"
+                    (click)="navigateBack()"
+                    title="Back to Groups"
+                >
+                    <mat-icon>arrow_back</mat-icon>
+                </button>
+                @if (student(); as s) {
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800">
+                            Tasks for {{ s.student.fullName }}
+                        </h1>
+                        <p class="text-sm text-slate-500">
+                            {{ s.student.email }}
+                        </p>
+                    </div>
+                } @else {
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-800">
+                            Loading Task Manager...
+                        </h1>
+                    </div>
+                }
+            </div>
+            <div class="flex items-center gap-2">
+                <span
+                    class="rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600"
+                >
+                    {{ totalTasksCount }} Total Tasks
+                </span>
+                <span
+                    class="rounded-full border border-green-200 bg-green-100 px-3 py-1 text-xs font-medium text-green-700"
+                >
+                    {{ completedTasksCount }} Completed
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="mx-auto grid w-full gap-6 px-6 py-8 lg:grid-cols-3">
+        <!-- Task List -->
+        <div class="lg:col-span-1">
+            <div class="rounded-lg bg-white shadow">
+                <div class="space-y-4 border-b p-4">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-lg font-semibold">Task History</h2>
+                        <button
+                            type="button"
+                            class="flex items-center gap-2 rounded bg-black px-3 py-1.5 text-sm text-white hover:bg-gray-800"
+                            (click)="initNewTaskForm()"
+                        >
+                            <mat-icon
+                                class="text-white"
+                                svgIcon="feather:plus-circle"
+                            />
+                            New Task
+                        </button>
+                    </div>
+                    <div>
+                        <label
+                            class="mb-1 block text-sm font-medium text-slate-700"
+                            >Search tasks...</label
+                        >
+                        <div class="relative">
+                            <mat-icon
+                                class="absolute left-3 top-2.5 text-slate-400"
+                                >search</mat-icon
+                            >
+                            <input
+                                type="text"
+                                class="w-full rounded-md border py-2 pl-10 pr-3 focus:ring focus:ring-indigo-200"
+                                [value]="searchQuery()"
+                                (input)="onSearchChange($event)"
+                            />
+                        </div>
+                    </div>
+                </div>
+                <div class="max-h-[600px] space-y-3 overflow-y-auto p-4">
+                    @if (filteredTasks.length > 0) {
+                        @for (task of filteredTasks; track task.id) {
+                            <div
+                                class="cursor-pointer rounded-md border p-4 transition hover:shadow-md"
+                                [class.bg-blue-50]="
+                                    task.id === selectedTask()?.id
+                                "
+                                [class.border-blue-500]="
+                                    task.id === selectedTask()?.id
+                                "
+                                (click)="selectTask(task)"
+                            >
+                                <div
+                                    class="mb-2 flex items-center justify-between"
+                                >
+                                    <span
+                                        class="inline-flex items-center gap-2 rounded-full px-3 py-2 text-md font-semibold"
+                                        [ngClass]="getStatusClass(task)"
+                                    >
+                                        <mat-icon
+                                            class="text-base text-inherit icon-size-5"
+                                        >
+                                            {{ getStatusIcon(task) }}
+                                        </mat-icon>
+                                        {{ getStatusText(task) }}
+                                    </span>
+                                    @if (task.mark) {
+                                        <span
+                                            class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+                                        >
+                                            {{ task.mark }}/20
+                                        </span>
+                                    }
+                                </div>
+                                <p
+                                    class="line-clamp-2 font-medium text-slate-800"
+                                >
+                                    {{ task.description }}
+                                </p>
+                                <div
+                                    class="mt-2 flex flex-wrap gap-4 text-sm text-slate-500"
+                                >
+                                    <div class="flex items-center gap-1">
+                                        <mat-icon
+                                            class="icon-size-5"
+                                            svgIcon="heroicons_outline:calendar"
+                                        />
+                                        <span
+                                            [class.text-red-600]="
+                                                isOverdue(task.dueDate) &&
+                                                !task.done
+                                            "
+                                        >
+                                            {{ formatDate(task.dueDate) }}
+                                        </span>
+                                    </div>
+                                    @if (task.branchLink) {
+                                        <div
+                                            class="flex max-w-[120px] items-center gap-1 truncate"
+                                        >
+                                            <mat-icon class="text-base"
+                                                >account_tree</mat-icon
+                                            >
+                                            <span class="truncate">{{
+                                                task.branchLink
+                                            }}</span>
+                                        </div>
+                                    } @else {
+                                        <div
+                                            class="flex max-w-[120px] items-center gap-1 italic text-gray-400"
+                                        >
+                                            <mat-icon
+                                                class="icon-size-5"
+                                                svgIcon="mat_outline:link_off"
+                                            />
+                                            <span class="truncate"
+                                                >No branch link</span
+                                            >
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    } @else {
+                        <div
+                            class="flex flex-col items-center justify-center py-12 text-slate-400"
+                        >
+                            <mat-icon svgIcon="error_outline" />
+                            <p class="text-lg font-medium text-slate-600">
+                                No tasks found
+                            </p>
+                            <p class="text-sm">
+                                Try adjusting your search criteria
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Form -->
+        <div class="lg:col-span-2">
+            <div class="rounded-lg bg-white shadow">
+                <div class="flex items-center justify-between border-b p-4">
+                    <h2 class="text-xl font-semibold">
+                        {{
+                            selectedTask()
+                                ? 'Edit Task Details'
+                                : 'Assign New Task'
+                        }}
+                    </h2>
+                    @if (selectedTask()) {
+                        <button
+                            type="button"
+                            class="flex items-center gap-1 rounded border px-3 py-1.5 hover:bg-slate-50"
+                            (click)="initNewTaskForm()"
+                        >
+                            <mat-icon>close</mat-icon>
+                            Cancel Edit
+                        </button>
+                    }
+                </div>
+                <form
+                    [formGroup]="taskForm"
+                    (ngSubmit)="onSubmit()"
+                    class="space-y-6 p-6"
+                >
+                    <div>
+                        <label class="mb-1 block text-sm font-medium"
+                            >Task Description</label
+                        >
+                        <textarea
+                            formControlName="description"
+                            placeholder="Describe the task requirements and objectives..."
+                            class="min-h-[100px] w-full resize-none rounded-md border p-2 disabled:bg-slate-100 disabled:text-slate-500"
+                            required
+                            [disabled]="selectedTask()"
+                        ></textarea>
+                        <!-- CHANGE: Added [disabled] binding. Also added disabled: styling for better UX. -->
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium"
+                                >Due Date</label
+                            >
+                            <input
+                                type="date"
+                                formControlName="dueDate"
+                                class="w-full rounded-md border p-2"
+                                required
+                            />
+                        </div>
+                        @if (selectedTask()) {
+                            <div>
+                                <label class="mb-1 block text-sm font-medium"
+                                    >Git Branch</label
+                                >
+                                <div class="relative">
+                                    <mat-icon
+                                        class="absolute left-3 top-2.5 text-slate-400"
+                                        >account_tree</mat-icon
+                                    >
+                                    <input
+                                        formControlName="branchLink"
+                                        class="w-full rounded-md border p-2 pl-10 disabled:bg-slate-100 disabled:text-slate-500"
+                                        placeholder="e.g., feature/login-system"
+                                        [disabled]="selectedTask()"
+                                    />
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (selectedTask()) {
+                        <hr class="border-t" />
+
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <mat-icon class="text-slate-400">edit</mat-icon>
+                                <h3
+                                    class="text-lg font-semibold text-slate-700"
+                                >
+                                    Grading
+                                </h3>
+                            </div>
+                            <div class="grid gap-4 md:grid-cols-2">
+                                <div>
+                                    <label
+                                        class="mb-1 block text-sm font-medium"
+                                        >Mark (out of 20)</label
+                                    >
+                                    <input
+                                        type="number"
+                                        formControlName="mark"
+                                        min="0"
+                                        max="20"
+                                        class="w-full rounded-md border p-2"
+                                        placeholder="0-20"
+                                    />
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label
+                                        class="mb-1 block text-sm font-medium"
+                                        >Feedback Comment</label
+                                    >
+                                    <textarea
+                                        formControlName="comment"
+                                        class="min-h-[80px] w-full resize-none rounded-md border p-2"
+                                        placeholder="Provide detailed feedback on the student's work..."
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="flex justify-end">
+                        <button
+                            type="submit"
+                            class="flex items-center gap-2 rounded-md bg-indigo-600 px-5 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+                            [disabled]="isSubmitting() || taskForm.invalid"
+                        >
+                            <mat-icon *ngIf="isSubmitting()"
+                                >hourglass_empty</mat-icon
+                            >
+                            @if (!isSubmitting()) {
+                                <mat-icon
+                                    class="text-white"
+                                    svgIcon="feather:save"
+                                />
+                            }
+                            {{ selectedTask() ? 'Update Task' : 'Assign Task' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

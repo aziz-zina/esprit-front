@@ -152,6 +152,14 @@ export const appRoutes: Route[] = [
                                 'app/modules/admin/academic/groups/groups.routes'
                             ),
                     },
+                    {
+                        path: 'tasks',
+                        title: 'routes.users.tasks.title',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/academic/tasks/tasks.routes'
+                            ),
+                    },
                 ],
             },
         ],

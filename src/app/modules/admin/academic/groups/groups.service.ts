@@ -6,10 +6,12 @@ import { PageRequest } from 'app/models/pagination/pageRequest';
 import { Observable } from 'rxjs';
 import {
     AddGroupRequest,
+    AddTaskRequest,
     Group,
     GroupMarkDto,
     GroupStudentDto,
     StudentMarkDto,
+    Task,
 } from './groups.types';
 
 @Injectable({ providedIn: 'root' })
@@ -71,5 +73,23 @@ export class GroupService {
             `${this.API_URL}/groups/${groupId}/student/${studentId}/mark`,
             markDto
         );
+    }
+
+    getGroupStudent(
+        groupId: string,
+        studentId: string
+    ): Observable<GroupStudentDto> {
+        return this._httpClient.get<GroupStudentDto>(
+            `${this.API_URL}/groups/${groupId}/student/${studentId}`
+        );
+    }
+
+    assignTaskToStudent(taskData: AddTaskRequest): Observable<Task> {
+        console.log(taskData);
+        return this._httpClient.post<Task>(`${this.API_URL}/tasks`, taskData);
+    }
+
+    updateTask(taskData: AddTaskRequest): Observable<Task> {
+        return this._httpClient.post<Task>(`${this.API_URL}/tasks`, taskData);
     }
 }
