@@ -16,6 +16,7 @@ export interface Group {
     nbRepositories?: number;
     mark?: number;
     comment?: string;
+    subjectName?: string;
 }
 
 export interface AddGroupRequest {
@@ -36,6 +37,7 @@ export interface StudentMarkDto {
 
 export interface GroupStudent {
     id: string;
+    group: Group;
     student: User;
     individualMark?: number;
     individualComment?: string;
@@ -71,4 +73,12 @@ export interface AddTaskRequest {
     description: string;
     dueDate: string;
     groupStudentId: string;
+}
+
+export interface UpdateTaskRequest {
+    dueDate: string;
+    mark: number;
+    comment: string;
+    done?: boolean;
+    branchLink?: string;
 }

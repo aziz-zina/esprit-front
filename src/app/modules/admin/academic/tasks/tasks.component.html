@@ -113,7 +113,16 @@
                                     </span>
                                     @if (task.mark) {
                                         <span
-                                            class="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700"
+                                            [ngClass]="{
+                                                'bg-red-100 text-red-700':
+                                                    task.mark < 10,
+                                                'bg-yellow-100 text-yellow-700':
+                                                    task.mark >= 10 &&
+                                                    task.mark < 14,
+                                                'bg-green-100 text-green-700':
+                                                    task.mark >= 14,
+                                            }"
+                                            class="rounded-full px-2 py-0.5 text-xs font-medium"
                                         >
                                             {{ task.mark }}/20
                                         </span>

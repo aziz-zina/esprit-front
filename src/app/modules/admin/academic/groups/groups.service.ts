@@ -12,6 +12,7 @@ import {
     GroupStudentDto,
     StudentMarkDto,
     Task,
+    UpdateTaskRequest,
 } from './groups.types';
 
 @Injectable({ providedIn: 'root' })
@@ -89,7 +90,10 @@ export class GroupService {
         return this._httpClient.post<Task>(`${this.API_URL}/tasks`, taskData);
     }
 
-    updateTask(taskData: AddTaskRequest): Observable<Task> {
-        return this._httpClient.post<Task>(`${this.API_URL}/tasks`, taskData);
+    updateTask(taskData: UpdateTaskRequest, taskId: string): Observable<Task> {
+        return this._httpClient.put<Task>(
+            `${this.API_URL}/tasks/${taskId}`,
+            taskData
+        );
     }
 }

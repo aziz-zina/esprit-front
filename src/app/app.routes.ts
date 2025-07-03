@@ -193,6 +193,14 @@ export const appRoutes: Route[] = [
                 loadChildren: () =>
                     import('./modules/view-grade/view-grade.routes'),
             },
+            {
+                path: 'view-tasks',
+                data: {
+                    role: 'student',
+                },
+                loadChildren: () =>
+                    import('./modules/view-tasks/view-tasks.routes'),
+            },
         ],
     },
     {

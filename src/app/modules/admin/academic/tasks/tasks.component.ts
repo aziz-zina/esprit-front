@@ -33,7 +33,12 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { finalize, Observable, switchMap } from 'rxjs';
 import { GroupService } from '../groups/groups.service';
-import { AddTaskRequest, GroupStudentDto, Task } from '../groups/groups.types';
+import {
+    AddTaskRequest,
+    GroupStudentDto,
+    Task,
+    UpdateTaskRequest,
+} from '../groups/groups.types';
 
 @Component({
     selector: 'app-student-tasks',
@@ -262,14 +267,18 @@ export class StudentTasksComponent implements OnInit {
         }
         let operation$: Observable<Task>;
 
-        if (currentTask) {
-            //TODO: finish the update function (create the backend API)
-            const payload: AddTaskRequest = {
-                description: formValue.description,
+        if (this.selectedTask()) {
+            console.log('salem: ', this.selectedTask());
+            const payload: UpdateTaskRequest = {
                 dueDate: formValue.dueDate,
-                groupStudentId: currentTask.id,
+                mark: formValue.mark,
+                comment: formValue.comment,
+                done: this.selectedTask().done,
             };
-            operation$ = this._groupService.updateTask(payload);
+            operation$ = this._groupService.updateTask(
+                payload,
+                this.selectedTask().id
+            );
         } else {
             const payload: AddTaskRequest = {
                 description: formValue.description,
