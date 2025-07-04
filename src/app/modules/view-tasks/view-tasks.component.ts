@@ -4,11 +4,14 @@ import { Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { KeycloakService } from '@core/auth/keycloak.service';
 import { GroupStudent, Task } from '../admin/academic/groups/groups.types';
+import { Repo } from '../admin/dashboards/project/project.types';
+import { SelectRepositoriesComponent } from './select-repositories/select-repositories.component';
 import { TaskService } from './view-tasks.service';
 
 @Component({
@@ -22,6 +25,7 @@ import { TaskService } from './view-tasks.service';
         MatButtonModule,
         MatChipsModule,
         ClipboardModule,
+        MatDialogModule,
     ],
     templateUrl: './view-tasks.component.html',
     styleUrl: './view-tasks.component.scss',
@@ -29,6 +33,7 @@ import { TaskService } from './view-tasks.service';
 export class ViewTasksComponent {
     private readonly _taskService = inject(TaskService);
     private readonly _keycloakService = inject(KeycloakService);
+    private readonly dialog = inject(MatDialog);
 
     readonly groups = signal<GroupStudent[]>([]);
     copied = new Map<string, boolean>();
@@ -41,6 +46,7 @@ export class ViewTasksComponent {
         this._taskService
             .getGroupsPerStudent(this._keycloakService.userId)
             .subscribe((data) => {
+                console.log(data);
                 this.groups.set(data);
             });
     }
@@ -123,22 +129,43 @@ export class ViewTasksComponent {
         return task.dueDate && now <= dueDate;
     }
 
-    /**
-     * Handles the copy event to provide visual feedback.
-     * Sets the state to 'copied' for 2 seconds.
-     */
-    onCopy(task: Task): void {
-        console.log(task);
-        const taskId = task.id;
-        console.log(taskId);
-        const branchName = this.generateBranchName(task);
-        console.log(branchName);
-        this._taskService.assignBranch(taskId, branchName).subscribe(() => {
-            this.fetchData();
+    onCopy(task: Task, group: GroupStudent): void {
+        const dialogRef = this.dialog.open(SelectRepositoriesComponent, {
+            data: { groupId: group.group.id },
+            disableClose: true,
         });
+
+        const taskId = task.id;
+
+        dialogRef
+            .afterClosed()
+            .subscribe((selectedRepos: Repo[] | undefined) => {
+                console.log(selectedRepos);
+                const branches: string[] = [];
+                for (const repo of selectedRepos) {
+                    const branchName = `http://localhost:4200/dashboards/project/${group.group.id}?repo=${repo.repositoryName}&branch=${this.generateBranchName(
+                        task
+                    )}`;
+                    branches.push(branchName);
+                }
+                console.log(branches);
+                this._taskService
+                    .assignBranches(taskId, branches)
+                    .subscribe(() => {
+                        this.fetchData();
+                    });
+            });
+
         this.copied.set(taskId, true);
         setTimeout(() => {
             this.copied.set(taskId, false);
         }, 2000);
+    }
+
+    extractBranchName(branchLink: string): string {
+        const url = new URL(branchLink);
+        const repo = url.searchParams.get('repo') || '';
+        const branch = url.searchParams.get('branch') || '';
+        return `repo: ${repo}, branch: ${branch}`;
     }
 }

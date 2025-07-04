@@ -1,62 +1,9 @@
 <div class="flex min-w-0 flex-auto flex-col">
     <!-- Header -->
     <div class="bg-card">
-        <div class="mx-auto flex w-full max-w-screen-xl flex-col px-6 sm:px-8">
-            <div
-                class="my-8 flex min-w-0 flex-auto flex-col sm:my-12 sm:flex-row sm:items-center"
-            >
-                <!-- Avatar and name -->
-                <!-- TODO Change this to breadcrumbs -->
-                <div class="flex min-w-0 flex-auto items-center">
-                    <div class="h-16 w-16 flex-0 overflow-hidden rounded-full">
-                        <img
-                            class="h-full w-full object-cover"
-                            src="images/avatars/brian-hughes.jpg"
-                        />
-                    </div>
-                    <div class="ml-4 flex min-w-0 flex-col">
-                        <ng-container *transloco="let t">
-                            <div
-                                class="truncate text-2xl font-semibold leading-7 tracking-tight md:text-5xl md:leading-snug"
-                            >
-                                {{ t('welcome-back') }}, Brian!
-                            </div>
-                        </ng-container>
-                        <div class="flex items-center">
-                            <mat-icon
-                                class="icon-size-5"
-                                [svgIcon]="'heroicons_solid:bell'"
-                            ></mat-icon>
-                            <div
-                                class="text-secondary ml-1.5 truncate leading-6"
-                            >
-                                You have 2 new messages and 15 new tasks
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Actions -->
-                <div class="mt-6 flex items-center space-x-3 sm:ml-2 sm:mt-0">
-                    <button
-                        class="bg-accent"
-                        mat-flat-button
-                        [color]="'accent'"
-                    >
-                        <mat-icon
-                            class="icon-size-5"
-                            [svgIcon]="'heroicons_solid:envelope'"
-                        ></mat-icon>
-                        <span class="ml-2">Messages</span>
-                    </button>
-                    <button mat-flat-button [color]="'primary'">
-                        <mat-icon
-                            class="icon-size-5"
-                            [svgIcon]="'heroicons_solid:cog-8-tooth'"
-                        ></mat-icon>
-                        <span class="ml-2">Settings</span>
-                    </button>
-                </div>
-            </div>
+        <div
+            class="mx-auto mt-5 flex w-full max-w-screen-xl flex-col px-6 sm:px-8"
+        >
             <!-- Project selector -->
             <div
                 class="bg-default relative flex cursor-pointer self-start overflow-hidden rounded-t-xl border border-b-0 pb-1 pl-5 pr-4 pt-2"
@@ -508,6 +455,7 @@
                     <ng-template matTabContent>
                         <app-repo-tree
                             [repoName]="selectedProject()"
+                            [branchName]="branchFromQuery"
                         ></app-repo-tree>
                     </ng-template>
                 </mat-tab>

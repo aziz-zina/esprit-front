@@ -20,7 +20,7 @@ import { TranslocoModule } from '@jsverse/transloco';
 import { HotToastService } from '@ngxpert/hot-toast';
 import { ProjectService } from 'app/modules/admin/dashboards/project/project.service';
 import { ApexOptions, NgApexchartsModule } from 'ng-apexcharts';
-import { Subject, switchMap, tap } from 'rxjs';
+import { Subject, switchMap, takeUntil, tap } from 'rxjs';
 import { Commit, ProjectStats } from './project.types';
 import { RepoTreeComponent } from './repo-tree/repo-tree.component';
 
@@ -59,6 +59,8 @@ export class ProjectComponent implements OnInit, OnDestroy {
     readonly projectStats = signal<ProjectStats>(null);
     readonly commits = signal<Commit[]>([]);
     readonly groupId = signal<string>('');
+    readonly repoFromQuery = signal<string | null>(null);
+    readonly branchFromQuery = signal<string | null>(null);
     // -----------------------------------------------------------------------------------------------------
     // @ Public properties
     // -----------------------------------------------------------------------------------------------------
@@ -82,12 +84,12 @@ export class ProjectComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.groupId.set(this._activatedRoute.snapshot.paramMap.get('id'));
 
-        // if (!id) {
-        //     // Navigate to fallback route if no id is found
-        //     this._toastService.error('Pick a category');
-        //     this._router.navigate(['/academic/groups']);
-        //     return;
-        // }
+        this._activatedRoute.queryParamMap
+            .pipe(takeUntil(this._unsubscribeAll))
+            .subscribe((params) => {
+                this.repoFromQuery.set(params.get('repo'));
+                this.branchFromQuery.set(params.get('branch'));
+            });
 
         this._projectService
             .getRepositoriesByGroupId(this.groupId())
@@ -153,8 +155,10 @@ export class ProjectComponent implements OnInit, OnDestroy {
     }
 
     setSelectedProject(project: string): void {
-        //TODO: fix the pie chart problem
         this.selectedProject.set(project);
+        if (this.repoFromQuery()) {
+            this.selectedProject.set(this.repoFromQuery());
+        }
         // --- IMPORTANT: Clear data BEFORE fetching new data ---
         this.projectStats.set(undefined); // Clear project stats immediately
         this.chartGithubIssues = null; // Clear first chart

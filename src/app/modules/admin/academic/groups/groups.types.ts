@@ -66,7 +66,7 @@ export interface Task {
     mark: number;
     done: boolean;
     comment: string;
-    branchLink: string;
+    branchLinks: string[];
 }
 
 export interface AddTaskRequest {
@@ -80,5 +80,5 @@ export interface UpdateTaskRequest {
     mark: number;
     comment: string;
     done?: boolean;
-    branchLink?: string;
+    branchLinks?: string[];
 }

@@ -1,11 +1,16 @@
 // src/app/repo-tree/repo-tree.component.ts
 import { CommonModule } from '@angular/common';
 import {
+    ChangeDetectionStrategy,
     Component,
+    computed,
+    effect,
     inject,
+    Injector,
     Input,
     OnChanges,
     OnInit,
+    signal,
     SimpleChanges,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -36,23 +41,58 @@ import { Branch, ContentType, RepositoryContent } from '../project.types';
         HighlightDirective,
     ],
     templateUrl: './repo-tree.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RepoTreeComponent implements OnInit, OnChanges {
     @Input() repoName: string | null = null;
+    @Input() branchName: string | null = null;
 
     private readonly _route = inject(ActivatedRoute);
     private readonly _router = inject(Router);
     private readonly _gitService = inject(ProjectService);
+    private readonly _injector = inject(Injector);
 
-    selectedBranch: string | null = null;
+    // --- Signal-based State ---
+    selectedBranch = signal<string | null>(null);
+    repoContents = signal<RepositoryContent[]>([]);
+    currentPath = signal<string[]>([]);
+    searchQuery = signal<string>('');
+
+    // --- Computed Signal for Displayed Contents ---
+    displayedContents = computed(() => {
+        const contents = this.repoContents();
+        const path = this.currentPath();
+        const query = this.searchQuery().toLowerCase();
+
+        // 1. Filter by current path
+        const currentPathPrefix = path.length > 0 ? path.join('/') + '/' : '';
+        let filteredContents = contents.filter((content) => {
+            const startsWithPrefix = content.path.startsWith(currentPathPrefix);
+            const pathSegments = content.path.split('/');
+            const isDirectChild = pathSegments.length === path.length + 1;
+            return startsWithPrefix && isDirectChild;
+        });
+
+        // 2. Filter by search query
+        if (query) {
+            filteredContents = filteredContents.filter((content) =>
+                content.name.toLowerCase().includes(query)
+            );
+        }
+
+        // 3. Sort the results
+        return filteredContents.sort((a, b) => {
+            if (a.type === ContentType.DIRECTORY && b.type === ContentType.FILE)
+                return -1;
+            if (a.type === ContentType.FILE && b.type === ContentType.DIRECTORY)
+                return 1;
+            return a.name.localeCompare(b.name);
+        });
+    });
+
     branches: Branch[] = [];
-    repoContents: RepositoryContent[] = [];
-    displayedContents: RepositoryContent[] = [];
-    currentPath: string[] = [];
-
     isLoading = true;
     errorMessage: string | null = null;
-    searchQuery: string = '';
 
     fileContentToDisplay: string | null = null;
     fileNameToDisplay: string | null = null;
@@ -61,7 +101,17 @@ export class RepoTreeComponent implements OnInit, OnChanges {
 
     ContentType = ContentType;
 
-    constructor() {}
+    constructor() {
+        effect(
+            () => {
+                const branch = this.selectedBranch();
+                if (this.repoName && branch) {
+                    this.loadRepoContents();
+                }
+            },
+            { injector: this._injector }
+        );
+    }
 
     ngOnInit(): void {
         if (this.repoName) {
@@ -74,19 +124,14 @@ export class RepoTreeComponent implements OnInit, OnChanges {
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes['repoName'] && !changes['repoName'].firstChange) {
-            this.selectedBranch = null;
-            this.currentPath = [];
-            this.searchQuery = '';
+            this.selectedBranch.set(null);
+            this.currentPath.set([]);
+            this.searchQuery.set('');
             this.clearFileContentDisplay();
             this._loadData(this.repoName);
         }
     }
 
-    /**
-     * Centralized method to load branches and repository contents.
-     * Called from ngOnInit (initial load) and ngOnChanges (when repoName input changes).
-     * @param repoName The name of the repository.
-     */
     private _loadData(repoName: string | null): void {
         if (!repoName) {
             this.errorMessage = 'Repository name is required to load data.';
@@ -102,11 +147,15 @@ export class RepoTreeComponent implements OnInit, OnChanges {
             next: (branches) => {
                 this.branches = branches;
                 if (branches.length > 0) {
-                    this.selectedBranch =
-                        branches.find((b) => b.name === 'main')?.name ||
-                        branches.find((b) => b.name === 'master')?.name ||
-                        branches[0].name;
-                    this.loadRepoContents();
+                    if (this.branchName) {
+                        this.selectedBranch.set(this.branchName);
+                    } else {
+                        const defaultBranch =
+                            branches.find((b) => b.name === 'main')?.name ||
+                            branches.find((b) => b.name === 'master')?.name ||
+                            branches[0].name;
+                        this.selectedBranch.set(defaultBranch);
+                    }
                 } else {
                     this.errorMessage =
                         'No branches found for this repository.';
@@ -122,7 +171,8 @@ export class RepoTreeComponent implements OnInit, OnChanges {
     }
 
     loadRepoContents(): void {
-        if (!this.repoName || !this.selectedBranch) {
+        const branch = this.selectedBranch();
+        if (!this.repoName || !branch) {
             this.errorMessage = 'Repository or branch not selected.';
             this.isLoading = false;
             return;
@@ -130,125 +180,64 @@ export class RepoTreeComponent implements OnInit, OnChanges {
 
         this.isLoading = true;
         this.errorMessage = null;
-        this.currentPath = [];
-        this.searchQuery = '';
+        this.currentPath.set([]);
+        this.searchQuery.set('');
         this.clearFileContentDisplay();
-        this._gitService
-            .getBranchContents(this.repoName, this.selectedBranch)
-            .subscribe({
-                next: (contents) => {
-                    this.repoContents = contents;
-                    this.applyFilters(); // Apply both path and search filters
-                    this.isLoading = false;
-                },
-                error: (err) => {
-                    console.error('Failed to load repository contents', err);
-                    this.errorMessage =
-                        err.message || 'Could not load repository contents.';
-                    this.isLoading = false;
-                },
-            });
-    }
 
-    onBranchChange(): void {
-        if (this.repoName && this.selectedBranch) {
-            this.clearFileContentDisplay(); // Clear file view on branch change
-            this.loadRepoContents(); // Reload contents for the new branch
-        }
-    }
-
-    // New method to apply all current filters (path and search)
-    applyFilters(): void {
-        this.clearFileContentDisplay(); // Clear file view on filter change to prevent stale content
-
-        let contentsToFilter = this.repoContents;
-
-        // 1. Filter by current path
-        const currentPathPrefix =
-            this.currentPath.length > 0 ? this.currentPath.join('/') + '/' : '';
-
-        contentsToFilter = contentsToFilter.filter((content) => {
-            const startsWithPrefix = content.path.startsWith(currentPathPrefix);
-            const pathSegments = content.path.split('/');
-            const currentPathSegmentsLength = this.currentPath.length;
-
-            // A content item is a direct child if its path has exactly one more segment
-            // than the current path, and it starts with the current path prefix.
-            // Example: currentPath=['src'], content.path='src/app/component.ts' (not direct child)
-            // Example: currentPath=['src'], content.path='src/app' (direct child)
-            const isDirectChild =
-                pathSegments.length === currentPathSegmentsLength + 1;
-
-            return startsWithPrefix && isDirectChild;
-        });
-
-        // 2. Filter by search query
-        if (this.searchQuery) {
-            const lowerCaseQuery = this.searchQuery.toLowerCase();
-            contentsToFilter = contentsToFilter.filter((content) =>
-                content.name.toLowerCase().includes(lowerCaseQuery)
-            );
-        }
-
-        // 3. Sort the results
-        this.displayedContents = contentsToFilter.sort((a, b) => {
-            // Directories first, then alphabetically
-            if (a.type === ContentType.DIRECTORY && b.type === ContentType.FILE)
-                return -1;
-            if (a.type === ContentType.FILE && b.type === ContentType.DIRECTORY)
-                return 1;
-            return a.name.localeCompare(b.name);
+        this._gitService.getBranchContents(this.repoName, branch).subscribe({
+            next: (contents) => {
+                this.repoContents.set(contents); // Set the signal value
+                this.isLoading = false;
+            },
+            error: (err) => {
+                console.error('Failed to load repository contents', err);
+                this.errorMessage =
+                    err.message || 'Could not load repository contents.';
+                this.isLoading = false;
+            },
         });
     }
 
-    // Method called from the search input
-    onSearchInputChange(event: Event): void {
-        this.searchQuery = (event.target as HTMLInputElement).value;
-        this.applyFilters(); // Re-apply all filters including the search
+    // This method now only handles the side-effect of clearing the file view.
+    // The actual filtering is handled by the `computed` signal.
+    onSearchInputChange(): void {
+        this.clearFileContentDisplay();
     }
 
     enterDirectory(directoryName: string): void {
-        this.currentPath.push(directoryName);
-        this.searchQuery = ''; // Clear search when entering directory
-        this.clearFileContentDisplay(); // Clear file view on directory entry
-        this.applyFilters();
+        this.currentPath.update((path) => [...path, directoryName]);
+        this.searchQuery.set('');
+        this.clearFileContentDisplay();
     }
 
     goBack(): void {
-        if (this.currentPath.length > 0) {
-            this.currentPath.pop();
-            this.searchQuery = ''; // Clear search when going back
-            this.clearFileContentDisplay(); // Clear file view when going back
-            this.applyFilters();
+        if (this.currentPath().length > 0) {
+            this.currentPath.update((path) => path.slice(0, -1));
+            this.searchQuery.set('');
+            this.clearFileContentDisplay();
         }
     }
 
     navigateToPath(index: number): void {
-        // Navigates to a specific path segment.
-        // If index is -1, it means going back to the root.
-        this.currentPath = this.currentPath.slice(0, index + 1);
-        this.searchQuery = ''; // Clear search when navigating breadcrumbs
-        this.clearFileContentDisplay(); // Clear file view on breadcrumb navigation
-        this.applyFilters();
+        this.currentPath.update((path) => path.slice(0, index + 1));
+        this.searchQuery.set('');
+        this.clearFileContentDisplay();
     }
 
     downloadFile(content: RepositoryContent): void {
-        if (
-            !this.repoName ||
-            !this.selectedBranch ||
-            content.type !== ContentType.FILE
-        ) {
+        const branch = this.selectedBranch();
+        if (!this.repoName || !branch || content.type !== ContentType.FILE) {
             return;
         }
 
         this._gitService
-            .downloadFile(this.repoName, this.selectedBranch, content.path)
+            .downloadFile(this.repoName, branch, content.path)
             .subscribe({
                 next: (blob) => {
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = content.name; // Use the file's name for download
+                    a.download = content.name;
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
@@ -263,37 +252,32 @@ export class RepoTreeComponent implements OnInit, OnChanges {
             });
     }
 
-    // New method to clear the displayed file content
     clearFileContentDisplay(): void {
         this.fileContentToDisplay = null;
         this.fileNameToDisplay = null;
         this.isContentBinaryOrUnreadable = false;
-        this.currentFileExtension = null; // <--- Clear the file extension too
+        this.currentFileExtension = null;
     }
 
-    // Helper to display file content in the component's HTML
     displayFileContent(content: RepositoryContent): void {
         if (content.type === ContentType.FILE && content.content) {
             this.fileNameToDisplay = content.name;
-            this.isContentBinaryOrUnreadable = false; // Reset flag for new file
-            // Extract file extension for highlight.js directive
+            this.isContentBinaryOrUnreadable = false;
             this.currentFileExtension =
-                content.name.split('.').pop()?.toLowerCase() || null; // <--- Set file extension
+                content.name.split('.').pop()?.toLowerCase() || null;
 
             console.log(`Displaying extension: ${this.currentFileExtension}`);
             try {
-                // Attempt to decode base64 if it's likely encoded
                 const decodedContent = atob(content.content);
-                // Basic check to see if it's primarily printable text characters + newlines
                 const isText =
                     decodedContent.length > 0 &&
                     Array.from(decodedContent).every(
                         (char) =>
                             (char.charCodeAt(0) >= 32 &&
-                                char.charCodeAt(0) <= 126) || // Printable ASCII
-                            char.charCodeAt(0) === 9 || // Tab
-                            char.charCodeAt(0) === 10 || // LF (Newline)
-                            char.charCodeAt(0) === 13 // CR (Carriage Return)
+                                char.charCodeAt(0) <= 126) ||
+                            char.charCodeAt(0) === 9 ||
+                            char.charCodeAt(0) === 10 ||
+                            char.charCodeAt(0) === 13
                     );
 
                 if (isText) {
@@ -307,9 +291,8 @@ export class RepoTreeComponent implements OnInit, OnChanges {
                     );
                 }
             } catch (e) {
-                // If atob fails (not valid base64), display original content directly
-                this.fileContentToDisplay = content.content; // Show raw content
-                this.isContentBinaryOrUnreadable = true; // Mark as unreadable/binary if base64 decode failed
+                this.fileContentToDisplay = content.content;
+                this.isContentBinaryOrUnreadable = true;
                 if (e instanceof Error) {
                     console.warn(
                         `File '${content.name}' content is not base64 or could not be decoded. Displaying as-is. Error: ${e.message}`
@@ -320,9 +303,7 @@ export class RepoTreeComponent implements OnInit, OnChanges {
                     );
                 }
             }
-        }
-        // If it's not a file or has no content, clear any previously displayed content.
-        else {
+        } else {
             this.clearFileContentDisplay();
         }
     }

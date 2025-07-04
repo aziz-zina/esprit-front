@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { APP_API_URL } from 'app/app.config';
 import { Observable } from 'rxjs';
@@ -15,12 +15,10 @@ export class TaskService {
         );
     }
 
-    assignBranch(taskId: string, branchName: string): Observable<Task> {
-        const params = new HttpParams().set('branchName', branchName);
+    assignBranches(taskId: string, branches: string[]): Observable<Task> {
         return this._httpClient.put<Task>(
             `${this.API_URL}/tasks/${taskId}/update-branch`,
-            {}, // empty body, since it's a PUT request just updating branch
-            { params }
+            branches
         );
     }
 }
