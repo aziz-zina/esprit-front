@@ -266,15 +266,52 @@
                                             track $index
                                         ) {
                                             <div
-                                                class="flex items-center gap-2"
+                                                class="group flex items-center justify-between rounded-lg border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-3 transition-all hover:border-slate-300 hover:shadow-sm"
                                             >
-                                                <mat-icon class="text-slate-500"
-                                                    >account_tree</mat-icon
+                                                <div
+                                                    class="flex min-w-0 flex-1 items-center gap-3"
                                                 >
-                                                <span
-                                                    class="truncate font-mono text-sm text-slate-800"
-                                                    >{{ link }}</span
+                                                    <div
+                                                        class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 transition-colors group-hover:bg-slate-200"
+                                                    >
+                                                        <mat-icon
+                                                            class="text-slate-600"
+                                                            >account_tree</mat-icon
+                                                        >
+                                                    </div>
+                                                    <div class="min-w-0 flex-1">
+                                                        <div
+                                                            class="truncate font-mono text-sm font-semibold text-slate-800"
+                                                        >
+                                                            {{
+                                                                extractBranchName(
+                                                                    link
+                                                                )
+                                                            }}
+                                                        </div>
+                                                        <div
+                                                            class="text-xs text-slate-500"
+                                                        >
+                                                            Branch #{{
+                                                                $index + 1
+                                                            }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <a
+                                                    [href]="link"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    class="flex items-center gap-1 rounded-md bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-800 group-hover:scale-105"
                                                 >
+                                                    <mat-icon class="text-base"
+                                                        >launch</mat-icon
+                                                    >
+                                                    <span
+                                                        class="hidden sm:inline"
+                                                        >Open</span
+                                                    >
+                                                </a>
                                             </div>
                                         }
                                     </div>

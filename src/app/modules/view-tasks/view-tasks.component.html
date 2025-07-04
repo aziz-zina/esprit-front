@@ -442,8 +442,11 @@
                                                         <!-- Checkout Command Section -->
                                                         @if (
                                                             !task.done &&
-                                                            !task.branchLinks &&
-                                                            isExpired(task)
+                                                            isExpired(task) &&
+                                                            (!task.branchLinks ||
+                                                                task.branchLinks
+                                                                    .length ===
+                                                                    0)
                                                         ) {
                                                             <div>
                                                                 <div
@@ -453,7 +456,6 @@
                                                                         class="select-none text-green-400"
                                                                         >$</span
                                                                     >
-                                                                    <!-- NEW: Added 'select-none' class to prevent manual copying -->
                                                                     <code
                                                                         class="flex-grow select-none overflow-x-auto whitespace-nowrap pr-2"
                                                                     >
@@ -506,7 +508,6 @@
                                                                     </button>
                                                                 </div>
 
-                                                                <!-- NEW: Updated Warning Message -->
                                                                 <div
                                                                     class="my-auto mt-2 flex items-start gap-3 rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-800"
                                                                     role="alert"
@@ -547,6 +548,46 @@
                                                                         review.
                                                                     </div>
                                                                 </div>
+                                                            </div>
+                                                        }
+
+                                                        <!-- NEW: Mark as Complete Action -->
+                                                        @if (!task.done) {
+                                                            <div
+                                                                class="flex justify-end pt-2"
+                                                            >
+                                                                <button
+                                                                    mat-raised-button
+                                                                    color="primary"
+                                                                    [disabled]="
+                                                                        !task.branchLinks ||
+                                                                        task
+                                                                            .branchLinks
+                                                                            .length ===
+                                                                            0
+                                                                    "
+                                                                    (click)="
+                                                                        markTaskAsDone(
+                                                                            task
+                                                                        )
+                                                                    "
+                                                                    matTooltip="You must submit a branch for this task before you can mark it as complete."
+                                                                    [matTooltipDisabled]="
+                                                                        task.branchLinks &&
+                                                                        task
+                                                                            .branchLinks
+                                                                            .length >
+                                                                            0
+                                                                    "
+                                                                    aria-label="Mark task as complete"
+                                                                >
+                                                                    <mat-icon
+                                                                        class="mr-2"
+                                                                        >check_circle</mat-icon
+                                                                    >
+                                                                    Mark as
+                                                                    Complete
+                                                                </button>
                                                             </div>
                                                         }
                                                     </div>

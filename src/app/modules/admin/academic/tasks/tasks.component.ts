@@ -1,6 +1,5 @@
 // student-tasks.component.ts
 
-import { CdkTextareaAutosize } from '@angular/cdk/text-field';
 import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
@@ -61,7 +60,6 @@ import {
         MatCardModule,
         MatBadgeModule,
         MatDividerModule,
-        CdkTextareaAutosize,
     ],
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -242,6 +240,13 @@ export class StudentTasksComponent implements OnInit {
     onSearchChange(event: Event): void {
         const target = event.target as HTMLInputElement;
         this.searchQuery.set(target.value);
+    }
+
+    extractBranchName(branchLink: string): string {
+        const url = new URL(branchLink);
+        const repo = url.searchParams.get('repo') || '';
+        const branch = url.searchParams.get('branch') || '';
+        return `repo: ${repo}, branch: ${branch}`;
     }
 
     onSubmit(): void {

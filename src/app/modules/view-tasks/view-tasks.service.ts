@@ -21,4 +21,11 @@ export class TaskService {
             branches
         );
     }
+
+    markAsDone(taskId: string): Observable<Task> {
+        return this._httpClient.put<Task>(
+            `${this.API_URL}/tasks/mark-as-done/${taskId}`,
+            {}
+        );
+    }
 }

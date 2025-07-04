@@ -168,4 +168,10 @@ export class ViewTasksComponent {
         const branch = url.searchParams.get('branch') || '';
         return `repo: ${repo}, branch: ${branch}`;
     }
+
+    markTaskAsDone(task: Task): void {
+        this._taskService.markAsDone(task.id).subscribe(() => {
+            this.fetchData();
+        });
+    }
 }
