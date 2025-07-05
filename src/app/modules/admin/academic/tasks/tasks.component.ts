@@ -38,6 +38,7 @@ import {
     Task,
     UpdateTaskRequest,
 } from '../groups/groups.types';
+import { log } from 'isomorphic-git';
 
 @Component({
     selector: 'app-student-tasks',
@@ -112,6 +113,7 @@ export class StudentTasksComponent implements OnInit {
             dueDate: [null, Validators.required],
             branchLink: [''],
             mark: [null, [Validators.min(0), Validators.max(20)]],
+            percentage: [null, [Validators.min(0), Validators.max(100)]],
             comment: [''],
         });
 
@@ -158,12 +160,14 @@ export class StudentTasksComponent implements OnInit {
             ...task,
             dueDate: formattedDueDate,
         });
+
         this.taskForm.get('description')?.disable();
         this.taskForm.get('branchLink')?.disable();
 
         this.taskForm.get('dueDate')?.enable();
         this.taskForm.get('mark')?.enable();
         this.taskForm.get('comment')?.enable();
+        this.taskForm.get('percentage')?.enable();
 
         this.taskForm.markAsPristine();
     }
@@ -174,6 +178,7 @@ export class StudentTasksComponent implements OnInit {
         this.taskForm.get('description')?.enable();
         this.taskForm.get('branchLink')?.enable();
         this.taskForm.get('dueDate')?.enable();
+        this.taskForm.get('percentage')?.enable();
     }
 
     navigateBack(): void {
@@ -278,6 +283,7 @@ export class StudentTasksComponent implements OnInit {
                 dueDate: formValue.dueDate,
                 mark: formValue.mark,
                 comment: formValue.comment,
+                percentage: formValue.percentage,
                 done: this.selectedTask().done,
             };
             operation$ = this._groupService.updateTask(
@@ -289,6 +295,7 @@ export class StudentTasksComponent implements OnInit {
                 description: formValue.description,
                 dueDate: formValue.dueDate,
                 groupStudentId: this.student().id,
+                percentage: formValue.percentage,
             };
             operation$ = this._groupService.assignTaskToStudent(payload);
         }

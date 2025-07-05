@@ -9,6 +9,7 @@ import {
     AddTaskRequest,
     Group,
     GroupMarkDto,
+    GroupStudent,
     GroupStudentDto,
     StudentMarkDto,
     Task,
@@ -94,6 +95,13 @@ export class GroupService {
         return this._httpClient.put<Task>(
             `${this.API_URL}/tasks/${taskId}`,
             taskData
+        );
+    }
+
+    calculateIndividualMark(groupId: string): Observable<GroupStudent> {
+        return this._httpClient.put<GroupStudent>(
+            `${this.API_URL}/groups/calculate-mark/${groupId}`,
+            {}
         );
     }
 }

@@ -71,7 +71,6 @@ export class ProjectComponent implements OnInit, OnDestroy {
     chartMonthlyExpenses: ApexOptions = {};
     chartYearlyExpenses: ApexOptions = {};
     data: any;
-    // selectedProject: string = '';
     private readonly _unsubscribeAll: Subject<any> = new Subject<any>();
 
     // -----------------------------------------------------------------------------------------------------
@@ -88,6 +87,7 @@ export class ProjectComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this._unsubscribeAll))
             .subscribe((params) => {
                 this.repoFromQuery.set(params.get('repo'));
+                this.selectedProject.set(params.get('repo'));
                 this.branchFromQuery.set(params.get('branch'));
             });
 
@@ -96,7 +96,7 @@ export class ProjectComponent implements OnInit, OnDestroy {
             .pipe(
                 tap((repos) => {
                     this.repositories.set(repos);
-                    if (repos.length > 0) {
+                    if (repos.length > 0 && !this.selectedProject()) {
                         this.selectedProject.set(repos[0]);
                     }
                 }),

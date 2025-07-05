@@ -31,7 +31,7 @@ export interface GroupMarkDto {
 }
 
 export interface StudentMarkDto {
-    mark: number;
+    mark?: number;
     comment?: string;
 }
 
@@ -64,6 +64,7 @@ export interface Task {
     updatedAt: string | null;
     version: number;
     mark: number;
+    percentage: number;
     done: boolean;
     comment: string;
     branchLinks: string[];
@@ -73,6 +74,7 @@ export interface AddTaskRequest {
     description: string;
     dueDate: string;
     groupStudentId: string;
+    percentage?: number;
 }
 
 export interface UpdateTaskRequest {
@@ -80,5 +82,6 @@ export interface UpdateTaskRequest {
     mark: number;
     comment: string;
     done?: boolean;
+    percentage?: number;
     branchLinks?: string[];
 }

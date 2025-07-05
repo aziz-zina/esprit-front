@@ -75,6 +75,7 @@ export class StudentsDetailsComponent implements OnInit {
         console.log('salem hné: ', groupStudent);
         const dialogRef = this._matDialog.open(AddStudentMarkComponent, {
             data: {
+                groupStudent: groupStudent,
                 group: this.group,
                 student: groupStudent.student,
                 currentMark: groupStudent.individualMark,
