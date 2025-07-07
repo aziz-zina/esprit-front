@@ -52,3 +52,9 @@ export interface RepositoryContent {
     type: ContentType;
     content?: string;
 }
+
+export interface Repo {
+    id: string;
+    repositoryName: string;
+    repositoryPath: string;
+}

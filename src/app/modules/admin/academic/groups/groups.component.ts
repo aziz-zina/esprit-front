@@ -192,6 +192,7 @@ export class GroupsComponent {
                             color: 'accent',
                             click: (rowData) =>
                                 this.navigateToRepositories(rowData.id),
+                            disabled: (rowData) => rowData.nbRepositories === 0,
                         },
                         {
                             type: 'icon',

@@ -189,19 +189,34 @@
                             >
                         </div>
                     </mat-card-content>
-                    <div *ngIf="group" class="border-t border-gray-200 p-4">
+                    <div
+                        *ngIf="group"
+                        class="flex items-center gap-3 border-t border-gray-200 p-4"
+                    >
+                        <!-- Updated Mark Button -->
                         <button
                             mat-stroked-button
                             color="primary"
-                            class="w-full"
+                            class="flex-1"
                             (click)="openStudentMarkDialog(groupStudent)"
                         >
-                            <mat-icon class="mr-2">star</mat-icon>
-                            {{
+                            <mat-icon>star</mat-icon>
+                            <span>{{
                                 groupStudent.individualMark
-                                    ? 'Update Individual Mark'
-                                    : 'Add Individual Mark'
-                            }}
+                                    ? 'Update Mark'
+                                    : 'Add Mark'
+                            }}</span>
+                        </button>
+
+                        <!-- NEW Task Management Button -->
+                        <button
+                            mat-stroked-button
+                            color="accent"
+                            class="flex-1"
+                            (click)="navigateToTaskManagement(groupStudent)"
+                        >
+                            <mat-icon svgIcon="feather:clipboard"></mat-icon>
+                            <span>Manage Tasks</span>
                         </button>
                     </div>
                 </mat-card>

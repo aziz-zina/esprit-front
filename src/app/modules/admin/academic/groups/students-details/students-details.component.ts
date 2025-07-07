@@ -11,6 +11,7 @@ import {
 import { MatDividerModule } from '@angular/material/divider'; // For dividers if needed
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar'; // For the header
+import { Router } from '@angular/router';
 import { AddStudentMarkComponent } from '../add-student-mark/add-student-mark.component';
 import { Group, GroupStudent } from '../groups.types';
 
@@ -37,6 +38,7 @@ export class StudentsDetailsComponent implements OnInit {
         MatDialogRef<StudentsDetailsComponent>
     ); // Inject MatDialogRef
     private readonly _matDialog = inject(MatDialog);
+    private readonly _router = inject(Router);
 
     ngOnInit(): void {
         // You can log the data here to confirm it's received
@@ -73,6 +75,7 @@ export class StudentsDetailsComponent implements OnInit {
         console.log('salem hné: ', groupStudent);
         const dialogRef = this._matDialog.open(AddStudentMarkComponent, {
             data: {
+                groupStudent: groupStudent,
                 group: this.group,
                 student: groupStudent.student,
                 currentMark: groupStudent.individualMark,
@@ -85,5 +88,19 @@ export class StudentsDetailsComponent implements OnInit {
                 this._dialogRef.close('success');
             }
         });
+    }
+
+    navigateToTaskManagement(student: GroupStudent): void {
+        // First, close this details dialog
+        this._dialogRef.close();
+
+        // Then, navigate to the new component's route
+        this._router.navigate([
+            '/academic/tasks', // Base path to the tasks module
+            'group', // The static 'group' segment
+            this.group.id, // The value for the :groupId parameter
+            'student', // The static 'student' segment
+            student.student.id, // The value for the :studentId parameter
+        ]);
     }
 }

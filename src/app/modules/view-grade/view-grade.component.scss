@@ -1,0 +1,31 @@
+/* src/app/pages/student/view-grade/view-grade.component.scss */
+
+// We use CSS variables to theme the progress bars based on a dynamic class.
+// This is more efficient than ngStyle.
+:host {
+    .progress-green {
+        --mdc-linear-progress-active-indicator-color: #22c55e; // green-500
+    }
+    .progress-sky {
+        --mdc-linear-progress-active-indicator-color: #0ea5e9; // sky-500
+    }
+    .progress-amber {
+        --mdc-linear-progress-active-indicator-color: #f59e0b; // amber-500
+    }
+    .progress-red {
+        --mdc-linear-progress-active-indicator-color: #ef4444; // red-500
+    }
+    .progress-slate {
+        --mdc-linear-progress-active-indicator-color: #94a3b8; // slate-400
+    }
+
+    // Default track color for all progress bars in this component
+    mat-progress-bar {
+       --mdc-linear-progress-track-color: #e2e8f0; // slate-200
+    }
+}
+
+// Ensure Angular Material button styles can be overridden for the repository links
+::ng-deep .mat-stroked-button.mat-primary .mdc-button__label {
+    color: var(--mdc-button-label-text-color);
+}

@@ -249,26 +249,29 @@ export class PickGroupComponent implements OnInit {
                 // Ensure a group was actually selected
                 this._repositoryService
                     .createRepo(this.DIALOG_DATA, selectedGroup.id) // Pass the ID from the selected Group object
-                    .pipe(
-                        this._toastService.observe({
-                            loading: 'Loading',
-                            success: () => {
-                                this.form.enable();
-                                this.close('success');
-                                return 'Success';
-                            },
-                            error: () => {
-                                this.form.enable();
-                                this.close('success');
-                                return 'Error';
-                            },
-                        }),
-                        catchError((error: unknown) => {
-                            this.close('success');
-                            return of(error);
-                        })
-                    )
+                    // .pipe(
+                    //     this._toastService.observe({
+                    //         loading: 'Loading',
+                    //         success: () => {
+                    //             this.form.enable();
+                    //             this.close('success');
+                    //             return 'Success';
+                    //         },
+                    //         error: () => {
+                    //             this.form.enable();
+                    //             this.close('success');
+                    //             return 'Error';
+                    //         },
+                    //     }),
+                    //     catchError((error: unknown) => {
+                    //         this.close('success');
+                    //         return of(error);
+                    //     })
+                    // )
                     .subscribe();
+                this.form.enable();
+                this.close('success');
+                this._toastService.success('Success');
             }
         } else {
             console.warn(

@@ -1,4 +1,4 @@
-import { DecimalPipe, NgFor } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
@@ -29,8 +29,7 @@ import { Subject, takeUntil } from 'rxjs';
         MatButtonToggleModule,
         NgApexchartsModule,
         MatTooltipModule,
-        NgFor,
-        DecimalPipe,
+        CommonModule,
     ],
 })
 export class AnalyticsComponent implements OnInit, OnDestroy {

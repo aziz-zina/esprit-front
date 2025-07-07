@@ -152,6 +152,14 @@ export const appRoutes: Route[] = [
                                 'app/modules/admin/academic/groups/groups.routes'
                             ),
                     },
+                    {
+                        path: 'tasks',
+                        title: 'routes.users.tasks.title',
+                        loadChildren: () =>
+                            import(
+                                'app/modules/admin/academic/tasks/tasks.routes'
+                            ),
+                    },
                 ],
             },
         ],
@@ -184,6 +192,14 @@ export const appRoutes: Route[] = [
                 },
                 loadChildren: () =>
                     import('./modules/view-grade/view-grade.routes'),
+            },
+            {
+                path: 'view-tasks',
+                data: {
+                    role: 'student',
+                },
+                loadChildren: () =>
+                    import('./modules/view-tasks/view-tasks.routes'),
             },
         ],
     },

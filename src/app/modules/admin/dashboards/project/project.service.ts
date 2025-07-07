@@ -6,6 +6,7 @@ import {
     Branch,
     Commit,
     ProjectStats,
+    Repo,
     RepositoryContent,
 } from './project.types';
 
@@ -54,8 +55,12 @@ export class ProjectService {
 
     getRepositoriesByGroupId(groupId: string): Observable<string[]> {
         return this._httpClient.get<string[]>(
-            `${this.API_URL}/repos/${groupId}`
+            `${this.API_URL}/repos/names/${groupId}`
         );
+    }
+
+    getByGroupId(groupId: string): Observable<Repo[]> {
+        return this._httpClient.get<Repo[]>(`${this.API_URL}/repos/${groupId}`);
     }
 
     getStats(repoName: string): Observable<ProjectStats> {

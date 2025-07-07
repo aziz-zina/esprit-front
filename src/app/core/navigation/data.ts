@@ -114,7 +114,14 @@ export const horizontalNavigation: FuseNavigationItem[] = [
         id: 'view-grade',
         title: 'Grades',
         type: 'basic',
-        icon: 'mat_solid:military_tech',
+        icon: 'mat_outline:military_tech',
         link: '/view-grade',
+    },
+    {
+        id: 'view-tasks',
+        title: 'Tasks',
+        type: 'basic',
+        icon: 'feather:check-square',
+        link: '/view-tasks',
     },
 ];

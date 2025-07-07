@@ -1,0 +1,635 @@
+<div class="min-h-screen w-full bg-gray-50 p-4 md:p-6">
+    <div class="mx-auto flex max-w-6xl flex-col gap-5">
+        <!-- Header -->
+        <div class="text-center">
+            <h1 class="mb-2 text-4xl font-bold text-slate-800">My Tasks</h1>
+            <p class="text-gray-600">
+                View and track your assignments across all groups
+            </p>
+        </div>
+
+        <!-- Summary Stats -->
+        @if (groups().length > 0) {
+            <div class="mt-5 grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div class="rounded-lg bg-white p-6 text-center shadow">
+                    <mat-icon class="mb-2 text-3xl text-blue-600"
+                        >groups</mat-icon
+                    >
+                    <div class="text-2xl font-bold text-gray-800">
+                        {{ groups().length }}
+                    </div>
+                    <div class="text-sm text-gray-600">Total Groups</div>
+                </div>
+
+                <div class="rounded-lg bg-white p-6 text-center shadow">
+                    <mat-icon class="mb-2 text-3xl text-green-600"
+                        >task_alt</mat-icon
+                    >
+                    <div class="text-2xl font-bold text-gray-800">
+                        {{ getCompletedTasksCount() }}
+                    </div>
+                    <div class="text-sm text-gray-600">Completed Tasks</div>
+                </div>
+
+                <div class="rounded-lg bg-white p-6 text-center shadow">
+                    <mat-icon class="mb-2 text-3xl text-orange-600"
+                        >pending_actions</mat-icon
+                    >
+                    <div class="text-2xl font-bold text-gray-800">
+                        {{ getPendingTasksCount() }}
+                    </div>
+                    <div class="text-sm text-gray-600">Pending Tasks</div>
+                </div>
+
+                <div class="rounded-lg bg-white p-6 text-center shadow">
+                    <mat-icon class="mb-2 text-3xl text-red-600"
+                        >warning</mat-icon
+                    >
+                    <div class="text-2xl font-bold text-gray-800">
+                        {{ getOverdueTasksCount() }}
+                    </div>
+                    <div class="text-sm text-gray-600">Overdue Tasks</div>
+                </div>
+            </div>
+        }
+
+        <!-- Groups Container -->
+        <div class="space-y-6">
+            @if (groups().length === 0) {
+                <!-- No Groups State -->
+                <div class="py-12 text-center">
+                    <mat-icon class="mb-4 text-6xl text-gray-400"
+                        >assignment</mat-icon
+                    >
+                    <h3 class="mb-2 text-xl font-semibold text-gray-700">
+                        No Groups Assigned
+                    </h3>
+                    <p class="text-gray-500">
+                        You are not currently assigned to any groups.
+                    </p>
+                </div>
+            } @else {
+                <!-- Groups List -->
+                @for (group of groups(); track group.id) {
+                    <mat-card
+                        class="overflow-hidden shadow-lg transition-shadow duration-300 hover:shadow-xl"
+                    >
+                        <!-- Group Header -->
+                        <mat-card-header
+                            class="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white"
+                        >
+                            <div
+                                class="flex w-full items-center justify-between"
+                            >
+                                <div>
+                                    <mat-card-title
+                                        class="mb-1 text-xl font-semibold"
+                                    >
+                                        Group name:
+                                        <span class="font-normal">{{
+                                            group.group.name
+                                        }}</span>
+                                    </mat-card-title>
+                                    <mat-card-subtitle class="text-blue-100">
+                                        Subject: {{ group.group.subjectName }}
+                                    </mat-card-subtitle>
+                                </div>
+                                <div class="text-right">
+                                    @if (group.finalMark !== undefined) {
+                                        <div
+                                            class="rounded-lg bg-white bg-opacity-20 px-3 py-1"
+                                        >
+                                            <span class="text-sm font-medium"
+                                                >Final Mark</span
+                                            >
+                                            <div class="text-lg font-bold">
+                                                {{ group.finalMark }}/20
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </mat-card-header>
+
+                        <mat-card-content class="p-6">
+                            <!-- Individual Mark Section -->
+                            @if (
+                                group.individualMark !== undefined ||
+                                group.individualComment
+                            ) {
+                                <div
+                                    class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4"
+                                >
+                                    <h4
+                                        class="mb-2 flex items-center font-semibold text-amber-800"
+                                    >
+                                        <mat-icon class="mr-2 text-amber-600"
+                                            >star</mat-icon
+                                        >
+                                        Individual Assessment
+                                    </h4>
+                                    <div
+                                        class="grid grid-cols-1 gap-4 md:grid-cols-2"
+                                    >
+                                        @if (
+                                            group.individualMark !== undefined
+                                        ) {
+                                            <div>
+                                                <span
+                                                    class="text-sm text-amber-700"
+                                                    >Mark:</span
+                                                >
+                                                <div
+                                                    class="text-lg font-semibold text-amber-800"
+                                                >
+                                                    {{
+                                                        group.individualMark
+                                                    }}/20
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (group.individualComment) {
+                                            <div>
+                                                <span
+                                                    class="text-sm text-amber-700"
+                                                    >Comment:</span
+                                                >
+                                                <p class="mt-1 text-amber-800">
+                                                    {{
+                                                        group.individualComment
+                                                    }}
+                                                </p>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Tasks Section -->
+                            <div>
+                                <h4
+                                    class="mb-4 flex items-center text-lg font-semibold text-gray-800"
+                                >
+                                    <mat-icon class="mr-2 text-blue-600"
+                                        >assignment</mat-icon
+                                    >
+                                    Tasks
+                                    @if (
+                                        group.tasks && group.tasks.length > 0
+                                    ) {
+                                        <span
+                                            class="ml-2 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800"
+                                        >
+                                            {{ group.tasks.length }}
+                                        </span>
+                                    }
+                                </h4>
+
+                                @if (!group.tasks || group.tasks.length === 0) {
+                                    <!-- No Tasks State -->
+                                    <div
+                                        class="rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 py-8 text-center"
+                                    >
+                                        <mat-icon
+                                            class="mb-3 text-4xl text-gray-400"
+                                            >task_alt</mat-icon
+                                        >
+                                        <h5
+                                            class="mb-1 text-lg font-medium text-gray-600"
+                                        >
+                                            No Tasks Assigned
+                                        </h5>
+                                        <p class="text-gray-500">
+                                            There are currently no tasks for
+                                            this group.
+                                        </p>
+                                    </div>
+                                } @else {
+                                    <!-- Tasks List -->
+                                    <div class="space-y-4">
+                                        @for (
+                                            task of group.tasks;
+                                            track task.id
+                                        ) {
+                                            <div
+                                                class="rounded-lg border border-gray-200 p-4 transition-shadow duration-200 hover:shadow-md"
+                                                [class.bg-green-50]="task.done"
+                                                [class.border-green-300]="
+                                                    task.done
+                                                "
+                                                [class.bg-red-50]="
+                                                    isTaskOverdue(task)
+                                                "
+                                                [class.border-red-300]="
+                                                    isTaskOverdue(task)
+                                                "
+                                                [class.bg-white]="
+                                                    !task.done &&
+                                                    !isTaskOverdue(task)
+                                                "
+                                            >
+                                                <!-- Task Header -->
+                                                <div
+                                                    class="mb-3 flex items-start justify-between"
+                                                >
+                                                    <div class="flex-1">
+                                                        <h6
+                                                            class="mb-1 flex items-center font-semibold text-gray-800"
+                                                        >
+                                                            @if (task.done) {
+                                                                <mat-icon
+                                                                    class="mr-2 text-lg text-green-600"
+                                                                    >check_circle</mat-icon
+                                                                >
+                                                            } @else if (
+                                                                isTaskOverdue(
+                                                                    task
+                                                                )
+                                                            ) {
+                                                                <mat-icon
+                                                                    class="mr-2 text-lg text-red-600"
+                                                                    >error</mat-icon
+                                                                >
+                                                            } @else {
+                                                                <mat-icon
+                                                                    class="mr-2 text-lg text-orange-500"
+                                                                    >radio_button_unchecked</mat-icon
+                                                                >
+                                                            }
+
+                                                            <span
+                                                                [class.line-through]="
+                                                                    task.done
+                                                                "
+                                                                [class.text-red-700]="
+                                                                    isTaskOverdue(
+                                                                        task
+                                                                    )
+                                                                "
+                                                            >
+                                                                {{
+                                                                    task.description
+                                                                }}
+                                                            </span>
+                                                        </h6>
+
+                                                        <!-- Task Meta Info -->
+                                                        <div
+                                                            class="flex flex-wrap gap-3 text-sm text-gray-600"
+                                                        >
+                                                            <span
+                                                                class="flex items-center"
+                                                            >
+                                                                <mat-icon
+                                                                    class="mr-1 text-sm"
+                                                                    >schedule</mat-icon
+                                                                >
+                                                                Due:
+                                                                {{
+                                                                    task.dueDate
+                                                                        | date
+                                                                            : 'medium'
+                                                                }}
+                                                            </span>
+                                                            @if (
+                                                                task.mark > 0
+                                                            ) {
+                                                                <span
+                                                                    class="flex items-center"
+                                                                >
+                                                                    <mat-icon
+                                                                        class="mr-1 text-sm"
+                                                                        >grade</mat-icon
+                                                                    >
+                                                                    Mark:
+                                                                    {{
+                                                                        task.mark
+                                                                    }}/20
+                                                                </span>
+                                                            }
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- Status Chip -->
+                                                    <mat-chip-set>
+                                                        @if (task.done) {
+                                                            <mat-chip
+                                                                class="bg-green-100 text-green-800"
+                                                            >
+                                                                <mat-icon
+                                                                    matChipAvatar
+                                                                    >check</mat-icon
+                                                                >
+                                                                Completed
+                                                            </mat-chip>
+                                                        } @else if (
+                                                            isTaskOverdue(task)
+                                                        ) {
+                                                            <mat-chip
+                                                                class="bg-red-100 text-red-800"
+                                                            >
+                                                                <mat-icon
+                                                                    matChipAvatar
+                                                                    >error</mat-icon
+                                                                >
+                                                                Overdue
+                                                            </mat-chip>
+                                                        } @else {
+                                                            <mat-chip
+                                                                class="bg-orange-100 text-orange-800"
+                                                            >
+                                                                <mat-icon
+                                                                    matChipAvatar
+                                                                    >pending</mat-icon
+                                                                >
+                                                                Pending
+                                                            </mat-chip>
+                                                        }
+                                                    </mat-chip-set>
+                                                </div>
+
+                                                <!-- START: MODIFIED SECTION - Task Details & Actions -->
+                                                @if (
+                                                    task.comment ||
+                                                    task.branchLinks ||
+                                                    !task.done
+                                                ) {
+                                                    <div
+                                                        class="mt-3 space-y-4 border-t border-gray-200 pt-3"
+                                                    >
+                                                        @if (task.comment) {
+                                                            <div>
+                                                                <span
+                                                                    class="text-sm font-medium text-gray-700"
+                                                                    >Comment:</span
+                                                                >
+                                                                <p
+                                                                    class="mt-1 text-gray-600"
+                                                                >
+                                                                    {{
+                                                                        task.comment
+                                                                    }}
+                                                                </p>
+                                                            </div>
+                                                        }
+                                                        <!-- Only render this block if there are branch links -->
+                                                        @if (
+                                                            task.branchLinks &&
+                                                            task.branchLinks
+                                                                .length > 0
+                                                        ) {
+                                                            <div
+                                                                class="mt-4 space-y-2"
+                                                            >
+                                                                <h4
+                                                                    class="mb-3 flex items-center text-sm font-semibold text-gray-800"
+                                                                >
+                                                                    <svg
+                                                                        class="mr-2 h-4 w-4 text-gray-600"
+                                                                        fill="none"
+                                                                        stroke="currentColor"
+                                                                        viewBox="0 0 24 24"
+                                                                    >
+                                                                        <path
+                                                                            stroke-linecap="round"
+                                                                            stroke-linejoin="round"
+                                                                            stroke-width="2"
+                                                                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                                                        ></path>
+                                                                    </svg>
+                                                                    Associated
+                                                                    Branches
+                                                                </h4>
+
+                                                                <div
+                                                                    class="flex flex-wrap gap-2"
+                                                                >
+                                                                    @for (
+                                                                        branchLink of task.branchLinks;
+                                                                        track branchLink.id
+                                                                    ) {
+                                                                        <div
+                                                                            class="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 transition-colors duration-200 hover:bg-blue-100"
+                                                                        >
+                                                                            <svg
+                                                                                class="mr-1.5 h-3 w-3 text-blue-600"
+                                                                                fill="none"
+                                                                                stroke="currentColor"
+                                                                                viewBox="0 0 24 24"
+                                                                            >
+                                                                                <path
+                                                                                    stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    stroke-width="2"
+                                                                                    d="M13 10V3L4 14h7v7l9-11h-7z"
+                                                                                ></path>
+                                                                            </svg>
+                                                                            <span
+                                                                                class="text-sm font-medium text-blue-800"
+                                                                            >
+                                                                                {{
+                                                                                    extractBranchName(
+                                                                                        branchLink
+                                                                                    )
+                                                                                }}
+                                                                            </span>
+                                                                        </div>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        }
+
+                                                        <!-- Checkout Command Section -->
+                                                        @if (
+                                                            !task.done &&
+                                                            isExpired(task) &&
+                                                            (!task.branchLinks ||
+                                                                task.branchLinks
+                                                                    .length ===
+                                                                    0)
+                                                        ) {
+                                                            <div>
+                                                                <div
+                                                                    class="flex items-center gap-2 rounded-lg bg-gray-900 p-2.5 font-mono text-sm text-gray-100 shadow-inner"
+                                                                >
+                                                                    <span
+                                                                        class="select-none text-green-400"
+                                                                        >$</span
+                                                                    >
+                                                                    <code
+                                                                        class="flex-grow select-none overflow-x-auto whitespace-nowrap pr-2"
+                                                                    >
+                                                                        git
+                                                                        checkout
+                                                                        -b
+                                                                        {{
+                                                                            generateBranchName(
+                                                                                task
+                                                                            )
+                                                                        }}
+                                                                    </code>
+                                                                    <button
+                                                                        mat-icon-button
+                                                                        [cdkCopyToClipboard]="
+                                                                            'git checkout -b ' +
+                                                                            generateBranchName(
+                                                                                task
+                                                                            )
+                                                                        "
+                                                                        (cdkCopyToClipboardCopied)="
+                                                                            onCopy(
+                                                                                task,
+                                                                                group
+                                                                            )
+                                                                        "
+                                                                        class="h-7 w-7 flex-shrink-0 text-gray-400 transition-colors hover:text-white"
+                                                                        [title]="
+                                                                            copied.get(
+                                                                                task.id
+                                                                            )
+                                                                                ? 'Copied & Submitted!'
+                                                                                : 'Copy and Submit Branch'
+                                                                        "
+                                                                    >
+                                                                        @if (
+                                                                            copied.get(
+                                                                                task.id
+                                                                            )
+                                                                        ) {
+                                                                            <mat-icon
+                                                                                class="text-green-400"
+                                                                                >check_circle</mat-icon
+                                                                            >
+                                                                        } @else {
+                                                                            <mat-icon
+                                                                                >content_copy</mat-icon
+                                                                            >
+                                                                        }
+                                                                    </button>
+                                                                </div>
+
+                                                                <div
+                                                                    class="my-auto mt-2 flex items-start gap-3 rounded-md border border-blue-300 bg-blue-50 p-3 text-sm text-blue-800"
+                                                                    role="alert"
+                                                                >
+                                                                    <mat-icon
+                                                                        class="my-auto flex-shrink-0 text-blue-500"
+                                                                        >info</mat-icon
+                                                                    >
+                                                                    <div
+                                                                        class="my-auto"
+                                                                    >
+                                                                        <strong
+                                                                            >To
+                                                                            submit
+                                                                            your
+                                                                            work,
+                                                                            you
+                                                                            must
+                                                                            click
+                                                                            the
+                                                                            copy
+                                                                            button.</strong
+                                                                        >
+                                                                        This
+                                                                        will
+                                                                        copy the
+                                                                        command
+                                                                        and
+                                                                        automatically
+                                                                        link
+                                                                        this new
+                                                                        branch
+                                                                        to the
+                                                                        task for
+                                                                        your
+                                                                        teacher
+                                                                        to
+                                                                        review.
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        }
+
+                                                        <!-- NEW: Mark as Complete Action -->
+                                                        @if (!task.done) {
+                                                            <div
+                                                                class="flex justify-end pt-2"
+                                                            >
+                                                                <button
+                                                                    mat-raised-button
+                                                                    color="primary"
+                                                                    [disabled]="
+                                                                        !task.branchLinks ||
+                                                                        task
+                                                                            .branchLinks
+                                                                            .length ===
+                                                                            0
+                                                                    "
+                                                                    (click)="
+                                                                        markTaskAsDone(
+                                                                            task
+                                                                        )
+                                                                    "
+                                                                    matTooltip="You must submit a branch for this task before you can mark it as complete."
+                                                                    [matTooltipDisabled]="
+                                                                        task.branchLinks &&
+                                                                        task
+                                                                            .branchLinks
+                                                                            .length >
+                                                                            0
+                                                                    "
+                                                                    aria-label="Mark task as complete"
+                                                                >
+                                                                    <mat-icon
+                                                                        class="mr-2"
+                                                                        >check_circle</mat-icon
+                                                                    >
+                                                                    Mark as
+                                                                    Complete
+                                                                </button>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                }
+                                                <!-- END: MODIFIED SECTION -->
+
+                                                <!-- Task Timestamps -->
+                                                <div
+                                                    class="mt-3 border-t border-gray-100 pt-3"
+                                                >
+                                                    <div
+                                                        class="flex justify-between text-xs text-gray-500"
+                                                    >
+                                                        <span
+                                                            >Created:
+                                                            {{
+                                                                task.createdAt
+                                                                    | date
+                                                                        : 'short'
+                                                            }}</span
+                                                        >
+                                                        @if (task.updatedAt) {
+                                                            <span
+                                                                >Updated:
+                                                                {{
+                                                                    task.updatedAt
+                                                                        | date
+                                                                            : 'short'
+                                                                }}</span
+                                                            >
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+                }
+            }
+        </div>
+    </div>
+</div>

@@ -1,5 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+    ChangeDetectionStrategy,
+    Component,
+    DestroyRef,
+    inject,
+    OnInit,
+    signal,
+    ViewEncapsulation,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -40,6 +48,8 @@ import { Group, GroupStudent } from '../admin/academic/groups/groups.types';
     ],
     templateUrl: './view-grade.component.html',
     styleUrl: './view-grade.component.scss',
+    changeDetection: ChangeDetectionStrategy.OnPush,
+    encapsulation: ViewEncapsulation.None,
 })
 export class ViewGradeComponent implements OnInit {
     // -----------------------------------------------------------------------------------------------------
@@ -53,7 +63,8 @@ export class ViewGradeComponent implements OnInit {
     // @ Observables and signals
     // -----------------------------------------------------------------------------------------------------
     readonly studentGroups = signal<Group[]>([]);
-    private currentStudentId = signal<string | undefined>(undefined);
+    readonly isLoading = signal<boolean>(true);
+    readonly currentStudentId = signal<string | undefined>(undefined);
 
     searchTerm = ''; // Local binding for ngModel
 
