@@ -184,7 +184,7 @@ export class PickGroupComponent implements OnInit {
      * It now accepts a Group object or null.
      */
     displayGroupName = (group: Group | null): string => {
-        return group ? group.name : '';
+        return group ? group.name + ' - ' + group.subject.name : '';
     };
 
     /**
