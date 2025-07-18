@@ -42,8 +42,9 @@
                     (optionSelected)="onGroupSelected($event)"
                 >
                     @for (group of filteredGroups(); track group.id) {
-                        <mat-option [value]="group"> <!-- CHANGE THIS to pass the whole object -->
-                            {{ group.name }}
+                        <mat-option [value]="group">
+                            <!-- CHANGE THIS to pass the whole object -->
+                            {{ group.name }} - {{ group.subject.name }}
                         </mat-option>
                     } @empty {
                         <mat-option disabled>No Groups</mat-option>
@@ -51,10 +52,16 @@
                 </mat-autocomplete>
 
                 <!-- ADD ERROR MESSAGES -->
-                @if (form.get('groupId')?.hasError('required') && form.get('groupId')?.touched) {
+                @if (
+                    form.get('groupId')?.hasError('required') &&
+                    form.get('groupId')?.touched
+                ) {
                     <mat-error>Group is required.</mat-error>
                 }
-                @if (form.get('groupId')?.hasError('groupMatch') && form.get('groupId')?.touched) {
+                @if (
+                    form.get('groupId')?.hasError('groupMatch') &&
+                    form.get('groupId')?.touched
+                ) {
                     <mat-error>Please select a group from the list.</mat-error>
                 }
             </mat-form-field>
